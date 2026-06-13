@@ -9,12 +9,16 @@
     "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-native": "^0.81.5",
     "@still/shared-types": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
     "typescript": "^5.4.5"
   }
 }
