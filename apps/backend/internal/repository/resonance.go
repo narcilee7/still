@@ -18,51 +18,50 @@ func NewResonanceRepository(pool *pgxpool.Pool) *ResonanceRepository {
 }
 
 // ToggleResonance adds or removes a resonance for (postID, userID).
-// It returns the delta (+1 or -1) applied to the post's resonance_count.
-func (r *ResonanceRepository) ToggleResonance(ctx context.Context, postID, userID string) (int32, error) {
+// It returns the delta (+1 or -1) applied to the post's resonance_count,
+// and the resulting resonance state for the user.
+func (r *ResonanceRepository) ToggleResonance(ctx context.Context, postID, userID string) (int32, bool, error) {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
-		return 0, fmt.Errorf("begin transaction failed: %w", err)
+		return 0, false, fmt.Errorf("begin transaction failed: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	var exists bool
-	if err := tx.QueryRow(ctx, `
-		SELECT EXISTS(SELECT 1 FROM resonances WHERE post_id = $1 AND user_id = $2)
-	`, postID, userID).Scan(&exists); err != nil {
-		return 0, fmt.Errorf("check resonance failed: %w", err)
+	insertResult, err := tx.Exec(ctx, `
+		INSERT INTO resonances (post_id, user_id) VALUES ($1, $2)
+		ON CONFLICT (post_id, user_id) DO NOTHING
+	`, postID, userID)
+	if err != nil {
+		return 0, false, fmt.Errorf("insert resonance failed: %w", err)
 	}
 
 	var delta int32
-	if exists {
+	var hasResonated bool
+	if insertResult.RowsAffected() == 1 {
+		delta = 1
+		hasResonated = true
+	} else {
 		_, err = tx.Exec(ctx, `
 			DELETE FROM resonances WHERE post_id = $1 AND user_id = $2
 		`, postID, userID)
 		if err != nil {
-			return 0, fmt.Errorf("delete resonance failed: %w", err)
+			return 0, false, fmt.Errorf("delete resonance failed: %w", err)
 		}
 		delta = -1
-	} else {
-		_, err = tx.Exec(ctx, `
-			INSERT INTO resonances (post_id, user_id) VALUES ($1, $2)
-		`, postID, userID)
-		if err != nil {
-			return 0, fmt.Errorf("insert resonance failed: %w", err)
-		}
-		delta = 1
+		hasResonated = false
 	}
 
 	_, err = tx.Exec(ctx, `
 		UPDATE posts SET resonance_count = GREATEST(0, resonance_count + $2) WHERE id = $1
 	`, postID, delta)
 	if err != nil {
-		return 0, fmt.Errorf("update resonance_count failed: %w", err)
+		return 0, false, fmt.Errorf("update resonance_count failed: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return 0, fmt.Errorf("commit resonance failed: %w", err)
+		return 0, false, fmt.Errorf("commit resonance failed: %w", err)
 	}
-	return delta, nil
+	return delta, hasResonated, nil
 }
 
 // HasResonated returns true if the user has resonated with the post.

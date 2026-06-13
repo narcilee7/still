@@ -2,6 +2,8 @@ package resonate
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"connectrpc.com/connect"
 
@@ -26,12 +28,20 @@ func NewService(postRepo *repository.PostRepository, resonanceRepo *repository.R
 
 // Resonate records a resonance on a post.
 func (s *Service) Resonate(ctx context.Context, req *connect.Request[stillv1.ResonateRequest]) (*connect.Response[stillv1.ResonateResponse], error) {
-	if _, err := s.resonanceRepo.ToggleResonance(ctx, req.Msg.PostId, db.DefaultUserID); err != nil {
+	if strings.TrimSpace(req.Msg.PostId) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("post_id is required"))
+	}
+	_, hasResonated, err := s.resonanceRepo.ToggleResonance(ctx, req.Msg.PostId, db.DefaultUserID)
+	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	post, err := s.postRepo.GetPost(ctx, req.Msg.PostId)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		code := connect.CodeInternal
+		if strings.Contains(err.Error(), "not found") {
+			code = connect.CodeNotFound
+		}
+		return nil, connect.NewError(code, err)
 	}
-	return connect.NewResponse(&stillv1.ResonateResponse{Post: post}), nil
+	return connect.NewResponse(&stillv1.ResonateResponse{Post: post, HasResonated: hasResonated}), nil
 }

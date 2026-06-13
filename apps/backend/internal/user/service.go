@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"connectrpc.com/connect"
 
@@ -25,9 +27,16 @@ func NewService(userRepo *repository.UserRepository, resonanceRepo *repository.R
 
 // GetProfile returns a user's profile.
 func (s *Service) GetProfile(ctx context.Context, req *connect.Request[stillv1.GetProfileRequest]) (*connect.Response[stillv1.GetProfileResponse], error) {
+	if strings.TrimSpace(req.Msg.UserId) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("user_id is required"))
+	}
 	user, err := s.userRepo.GetUser(ctx, req.Msg.UserId)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		code := connect.CodeInternal
+		if strings.Contains(err.Error(), "not found") {
+			code = connect.CodeNotFound
+		}
+		return nil, connect.NewError(code, err)
 	}
 
 	postsCount, err := s.userRepo.CountPosts(ctx, req.Msg.UserId)
@@ -41,8 +50,8 @@ func (s *Service) GetProfile(ctx context.Context, req *connect.Request[stillv1.G
 	}
 
 	return connect.NewResponse(&stillv1.GetProfileResponse{
-		User:             user,
-		PostsCount:       postsCount,
-		ResonancesCount:  resonancesCount,
+		User:            user,
+		PostsCount:      postsCount,
+		ResonancesCount: resonancesCount,
 	}), nil
 }

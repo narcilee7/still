@@ -6,7 +6,8 @@
   "types": "src/index.ts",
   "scripts": {
     "build": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "echo 'No tests yet'"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^1.10.0",
