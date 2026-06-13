@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Dimensions, Image, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { Post } from '@still/shared-types';
 import { colors, spacing, typography } from '../theme';
-import { MoodTag } from './MoodTag';
+import { MoodTag } from './MoodTag'
 import { ResonateButton } from './ResonateButton';
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -17,7 +18,6 @@ export interface PostCardProps {
 }
 
 export function PostCard({ post, variant, resonated, onResonate, onShare, style }: PostCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   if (variant === 'compact') {
@@ -26,14 +26,15 @@ export function PostCard({ post, variant, resonated, onResonate, onShare, style 
         <View style={compactStyles.imageContainer}>
           <Image
             source={{ uri: post.imageUrl }}
-            style={[compactStyles.image, imageLoaded && compactStyles.imageVisible]}
-            resizeMode="cover"
-            onLoad={() => setImageLoaded(true)}
+            style={compactStyles.image}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={500}
             onError={() => setImageError(true)}
           />
-          {(!imageLoaded || imageError) && (
+          {imageError && (
             <View style={compactStyles.imagePlaceholder}>
-              {imageError && <Text style={compactStyles.imagePlaceholderText}>?</Text>}
+              <Text style={compactStyles.imagePlaceholderText}>?</Text>
             </View>
           )}
         </View>
@@ -62,14 +63,15 @@ export function PostCard({ post, variant, resonated, onResonate, onShare, style 
       <View style={fullStyles.imageContainer}>
         <Image
           source={{ uri: post.imageUrl }}
-          style={[fullStyles.image, imageLoaded && fullStyles.imageVisible]}
-          resizeMode="cover"
-          onLoad={() => setImageLoaded(true)}
+          style={fullStyles.image}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={500}
           onError={() => setImageError(true)}
         />
-        {(!imageLoaded || imageError) && (
+        {imageError && (
           <View style={fullStyles.imagePlaceholder}>
-            {imageError && <Text style={fullStyles.imagePlaceholderText}>?</Text>}
+            <Text style={fullStyles.imagePlaceholderText}>?</Text>
           </View>
         )}
       </View>
@@ -103,10 +105,6 @@ const fullStyles = StyleSheet.create({
   },
   image: {
     flex: 1,
-    opacity: 0,
-  },
-  imageVisible: {
-    opacity: 1,
   },
   imagePlaceholder: {
     ...StyleSheet.absoluteFillObject,
@@ -173,11 +171,7 @@ const compactStyles = StyleSheet.create({
   image: {
     width: 88,
     height: 110,
-    opacity: 0,
     backgroundColor: colors.border,
-  },
-  imageVisible: {
-    opacity: 1,
   },
   imagePlaceholder: {
     ...StyleSheet.absoluteFillObject,

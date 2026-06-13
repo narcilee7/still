@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
-  Image,
   ListRenderItem,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useAuth } from '@clerk/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Post } from '@still/shared-types';
