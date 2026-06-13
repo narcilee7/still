@@ -2,10 +2,8 @@ package server
 
 import (
 	"context"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -43,23 +41,15 @@ func New(addr string, pool *pgxpool.Pool, analyzer ai.Analyzer, store storage.St
 	mux.Handle(stillv1connect.NewUserServiceHandler(user.NewService(userRepo, resonanceRepo)))
 	mux.Handle(stillv1connect.NewStorageServiceHandler(storage.NewService(store)))
 
-	localStore, ok := store.(*storage.LocalStore)
-	if ok {
-		mux.Handle("/_upload/", uploadHandler(localStore.UploadDir()))
-		mux.Handle("/_files/", fileHandler(localStore.UploadDir()))
-	}
-
 	mux.Handle("/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok"))
 	}))
 
-	_ = cfg
-
 	return &Server{
 		http: &http.Server{
 			Addr:    addr,
-			Handler: withCORS(mux),
+			Handler: withCORS(mux, cfg),
 		},
 	}
 }
@@ -74,11 +64,24 @@ func (s *Server) Start(ctx context.Context) error {
 	return s.http.ListenAndServe()
 }
 
-func withCORS(next http.Handler) http.Handler {
+func withCORS(next http.Handler, cfg *config.Config) http.Handler {
+	allowed := cfg.CORSAllowedOrigins
+	if allowed == "" {
+		allowed = "*"
+	}
+	origins := strings.Split(allowed, ",")
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		if allowed == "*" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		} else if origin != "" && contains(origins, origin) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Connect-Protocol-Version, X-User-Agent")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Connect-Protocol-Version, X-User-Agent, Authorization")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -87,53 +90,11 @@ func withCORS(next http.Handler) http.Handler {
 	})
 }
 
-func uploadHandler(uploadDir string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost && r.Method != http.MethodPut {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
+func contains(list []string, item string) bool {
+	for _, s := range list {
+		if strings.TrimSpace(s) == item {
+			return true
 		}
-
-		key := filepath.Base(r.URL.Path)
-		if key == "" || key == "." || key == "/" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		if err := os.MkdirAll(uploadDir, 0o755); err != nil {
-			log.Error().Err(err).Msg("create upload dir failed")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		path := filepath.Join(uploadDir, key)
-		file, err := os.Create(path)
-		if err != nil {
-			log.Error().Err(err).Msg("create upload file failed")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		defer file.Close()
-
-		const maxUploadSize = 20 << 20 // 20 MB
-		if _, err := io.Copy(file, io.LimitReader(r.Body, maxUploadSize)); err != nil {
-			log.Error().Err(err).Msg("save upload file failed")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-	})
-}
-
-func fileHandler(uploadDir string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		key := filepath.Base(r.URL.Path)
-		path := filepath.Join(uploadDir, key)
-		http.ServeFile(w, r, path)
-	})
+	}
+	return false
 }

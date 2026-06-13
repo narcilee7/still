@@ -61,6 +61,10 @@ func (a *OpenAIAnalyzer) Analyze(ctx context.Context, imageURL string) (*Result,
 	}
 
 	content := strings.TrimSpace(resp.Choices[0].Message.Content)
+	content = strings.TrimPrefix(content, "```json")
+	content = strings.TrimPrefix(content, "```")
+	content = strings.TrimSuffix(content, "```")
+	content = strings.TrimSpace(content)
 	var parsed struct {
 		Mood        string `json:"mood"`
 		Title       string `json:"title"`

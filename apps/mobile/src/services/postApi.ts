@@ -13,8 +13,10 @@ import {
 } from '@still/generated-sdk';
 import { Mood, Post, User } from '@still/shared-types';
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
+
 const transport = createConnectTransport({
-  baseUrl: 'http://localhost:8080',
+  baseUrl: API_BASE_URL,
 });
 
 const feedClient = createPromiseClient(FeedService, transport);
@@ -115,9 +117,11 @@ export async function uploadImage(localUri: string, uploadUrl: string, contentTy
     body: blob,
     headers: {
       'Content-Type': contentType,
+      'x-amz-acl': 'public-read',
     },
   });
   if (!response.ok) {
-    throw new Error(`upload failed: ${response.status}`);
+    const body = await response.text();
+    throw new Error(`upload failed: ${response.status} ${body}`);
   }
 }

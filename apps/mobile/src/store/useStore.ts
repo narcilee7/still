@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Post, User } from '@still/shared-types';
-import { MOCK_USER, CurrentUser } from '../data/mockUser';
+import { DEFAULT_USER, CurrentUser } from '../data/defaultUser';
 
 interface AppState {
   posts: Post[];
@@ -16,7 +16,7 @@ interface AppState {
 
 export const useStore = create<AppState>((set) => ({
   posts: [],
-  user: MOCK_USER,
+  user: DEFAULT_USER,
   resonatedPostIds: new Set(),
 
   setPosts: (posts) => set({ posts }),

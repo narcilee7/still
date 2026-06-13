@@ -34,7 +34,7 @@ still/
 | Backend | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai |
 | API | Protocol Buffers + buf |
 | Database | PostgreSQL |
-| Storage | Cloudflare R2 |
+| Storage | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2) |
 | AI | OpenAI / Claude / Gemini（统一抽象） |
 | Auth | Clerk（推荐）或 Supabase Auth |
 | Observability | zerolog + OpenTelemetry + Sentry |
@@ -56,10 +56,16 @@ yarn install
 # 生成 Proto SDK
 yarn generate:proto
 
-# 启动后端（端口 8080）
+# 启动基础设施（PostgreSQL + MinIO for S3 dev）
+docker compose up -d
+
+# 配置环境变量后启动后端（端口 8080）
+# 开发默认读取 apps/backend/.env.development
+cp .env.example apps/backend/.env.development
+# 编辑 .env.development 填入 OPENAI_API_KEY 后：
 yarn dev:backend
 
-# 启动移动端 Expo
+# 启动移动端 Expo（读取 apps/mobile/.env.development）
 cd apps/mobile && yarn start
 
 # 运行数据库迁移（需要本地 PostgreSQL）

@@ -20,7 +20,7 @@ func NewService(store Store) *Service {
 
 // GetUploadURL returns a presigned upload URL and the future public URL.
 func (s *Service) GetUploadURL(ctx context.Context, req *connect.Request[stillv1.GetUploadURLRequest]) (*connect.Response[stillv1.GetUploadURLResponse], error) {
-	uploadURL, publicURL, err := s.store.GenerateUploadURL(ctx, req.Msg.Filename)
+	uploadURL, publicURL, err := s.store.GenerateUploadURL(ctx, req.Msg.Filename, req.Msg.ContentType)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
