@@ -14,7 +14,7 @@ Monorepo，使用 Yarn workspaces。
 ```text
 still/
 ├── apps/
-│   ├── mobile/          # Expo React Native (TypeScript)
+│   ├── mobile/          # Expo React Native (TypeScript): navigation / screens / store / services / data
 │   └── backend/         # Go + ConnectRPC 单体服务
 ├── proto/
 │   └── still/v1/        # API 协议定义（Proto First）
@@ -30,7 +30,7 @@ still/
 
 | 层级 | 技术 |
 |------|------|
-| Mobile | Expo (React Native) + TypeScript |
+| Mobile | Expo (React Native) + TypeScript + React Navigation + Zustand |
 | Backend | Go 1.26 + ConnectRPC |
 | API | Protocol Buffers + buf |
 | Database | PostgreSQL |
