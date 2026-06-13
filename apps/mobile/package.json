@@ -17,6 +17,7 @@
     "@clerk/expo": "^3.4.2",
     "@connectrpc/connect": "^1.4.0",
     "@connectrpc/connect-web": "^1.4.0",
+    "@react-native-async-storage/async-storage": "^3.1.1",
     "@react-navigation/bottom-tabs": "^7.18.0",
     "@react-navigation/native": "^7.3.1",
     "@react-navigation/native-stack": "^7.17.3",
