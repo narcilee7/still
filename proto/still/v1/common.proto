@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package still.v1;
+
+option go_package = "github.com/still-mvp/still/apps/backend/gen/still/v1;stillv1";
+
+import "google/protobuf/timestamp.proto";
+
+message Post {
+  string id = 1;
+  string user_id = 2;
+  string image_url = 3;
+  string mood = 4;
+  string title = 5;
+  string description = 6;
+  PostStatus status = 7;
+  google.protobuf.Timestamp created_at = 8;
+  int32 resonance_count = 9;
+}
+
+enum PostStatus {
+  POST_STATUS_UNSPECIFIED = 0;
+  POST_STATUS_PENDING = 1;
+  POST_STATUS_APPROVED = 2;
+  POST_STATUS_REJECTED = 3;
+}
+
+message User {
+  string id = 1;
+  string username = 2;
+  string avatar_url = 3;
+  google.protobuf.Timestamp created_at = 4;
+}

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package still.v1;
+
+option go_package = "github.com/still-mvp/still/apps/backend/gen/still/v1;stillv1";
+
+import "still/v1/common.proto";
+
+service ResonateService {
+  rpc Resonate(ResonateRequest) returns (ResonateResponse);
+}
+
+message ResonateRequest {
+  string post_id = 1;
+}
+
+message ResonateResponse {
+  Post post = 1;
+}

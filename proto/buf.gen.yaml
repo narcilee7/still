@@ -1,0 +1,19 @@
+version: v1
+managed:
+  enabled: true
+plugins:
+  - plugin: go
+    out: ../apps/backend/gen
+    opt: paths=source_relative
+  - plugin: connect-go
+    out: ../apps/backend/gen
+    opt: paths=source_relative
+  - plugin: es
+    out: ../packages/generated-sdk/src/gen
+    opt: target=ts
+  - plugin: connect-query
+    out: ../packages/generated-sdk/src/gen
+    opt: target=ts
+  - plugin: connect-es
+    out: ../packages/generated-sdk/src/gen
+    opt: target=ts

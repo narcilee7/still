@@ -1,0 +1,11 @@
+{
+  "name": "@still/backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "export PATH=\"/opt/homebrew/bin:$PATH\" && go run ./cmd/server",
+    "build": "export PATH=\"/opt/homebrew/bin:$PATH\" && go build -o bin/server ./cmd/server",
+    "test": "export PATH=\"/opt/homebrew/bin:$PATH\" && go test ./...",
+    "lint": "export PATH=\"/opt/homebrew/bin:$PATH\" && go vet ./..."
+  }
+}

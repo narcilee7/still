@@ -1,0 +1,12 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@still/design-system": ["../../packages/design-system/src/index.ts"],
+      "@still/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@still/generated-sdk": ["../../packages/generated-sdk/src/index.ts"]
+    }
+  }
+}
