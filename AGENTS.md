@@ -58,11 +58,15 @@ make help
 make install
 make env        # 然后编辑 apps/backend/.env.development 填入 OPENAI_API_KEY 和 CLERK_SECRET_KEY
                 # 编辑 apps/mobile/.env.development 填入 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
-make infra
+make infra-up   # 启动本地 PostgreSQL + MinIO
 
 # 启动后端（端口 8080）和移动端
 make backend    # 读取 apps/backend/.env.development
 make mobile     # 读取 apps/mobile/.env.development
+
+# Docker / 部署
+make docker-build      # 构建后端 Docker 镜像
+make docker-prod-up    # 本地启动类生产容器栈
 
 # 其他常用命令
 make proto      # 生成 Proto SDK

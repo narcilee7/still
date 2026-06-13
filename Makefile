@@ -21,13 +21,22 @@ infra-up: ## Start local infrastructure (PostgreSQL + MinIO)
 infra-down: ## Stop local infrastructure
 	docker compose down
 
+docker-build: ## Build the backend Docker image
+	docker build -t still-backend ./apps/backend
+
+docker-prod-up: ## Run production-like stack locally (requires apps/backend/.env.production)
+	docker compose -f docker-compose.prod.yml up -d
+
+docker-prod-down: ## Stop production-like stack
+	docker compose -f docker-compose.prod.yml down
+
 backend: ## Start the Go backend (loads apps/backend/.env.development)
 	yarn dev:backend
 
 mobile: ## Start the Expo mobile app (loads apps/mobile/.env.development)
 	cd apps/mobile && yarn start
 
-dev: infra ## Start infrastructure and then the backend
+dev: infra-up ## Start infrastructure and then the backend
 	yarn dev:backend
 
 build: ## Build all workspaces
