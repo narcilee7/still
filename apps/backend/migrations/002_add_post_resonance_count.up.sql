@@ -1,0 +1,2 @@
+ALTER TABLE posts
+    ADD COLUMN IF NOT EXISTS resonance_count INT NOT NULL DEFAULT 0;

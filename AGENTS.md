@@ -14,8 +14,8 @@ Monorepo，使用 Yarn workspaces。
 ```text
 still/
 ├── apps/
-│   ├── mobile/          # Expo React Native (TypeScript)
-│   └── backend/         # Go + ConnectRPC 单体服务
+│   ├── mobile/          # Expo React Native (TypeScript): navigation / screens / store / services / data
+│   └── backend/         # Go + ConnectRPC 单体服务：internal/{db,repository,service} / cmd/server
 ├── proto/
 │   └── still/v1/        # API 协议定义（Proto First）
 ├── packages/
@@ -30,11 +30,11 @@ still/
 
 | 层级 | 技术 |
 |------|------|
-| Mobile | Expo (React Native) + TypeScript |
-| Backend | Go 1.26 + ConnectRPC |
+| Mobile | Expo (React Native) + TypeScript + React Navigation + Zustand |
+| Backend | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai |
 | API | Protocol Buffers + buf |
 | Database | PostgreSQL |
-| Storage | Cloudflare R2 |
+| Storage | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2) |
 | AI | OpenAI / Claude / Gemini（统一抽象） |
 | Auth | Clerk（推荐）或 Supabase Auth |
 | Observability | zerolog + OpenTelemetry + Sentry |
@@ -50,20 +50,25 @@ still/
 ## Development Commands
 
 ```bash
-# 安装所有依赖
-yarn install
+# 查看所有可用命令
+make help
 
-# 生成 Proto SDK
-yarn generate:proto
+# 一键：安装依赖、生成环境文件、启动基础设施
+make install
+make env        # 然后编辑 apps/backend/.env.development 填入 OPENAI_API_KEY
+make infra
 
-# 启动后端（端口 8080）
-yarn dev:backend
+# 启动后端（端口 8080）和移动端
+make backend    # 读取 apps/backend/.env.development
+make mobile     # 读取 apps/mobile/.env.development
 
-# 启动移动端 Expo
-cd apps/mobile && yarn start
-
-# 运行数据库迁移（需要本地 PostgreSQL）
-yarn migrate up
+# 其他常用命令
+make proto      # 生成 Proto SDK
+make build      # 构建所有 workspace
+make lint       # 运行 linter
+make test       # 运行测试
+make migrate    # 数据库迁移 up
+make clean      # 停止基础设施并清理卷
 ```
 
 ## Code Style
