@@ -5,12 +5,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 
 	"github.com/still-mvp/still/apps/backend/internal/ai"
 	"github.com/still-mvp/still/apps/backend/internal/db"
+	"github.com/still-mvp/still/apps/backend/internal/observability"
 	"github.com/still-mvp/still/apps/backend/internal/server"
 	"github.com/still-mvp/still/apps/backend/internal/storage"
 	"github.com/still-mvp/still/apps/backend/pkg/config"
@@ -22,6 +25,29 @@ func main() {
 	cfg := config.Load()
 	if err := cfg.Validate(); err != nil {
 		log.Fatal().Err(err).Msg("config validation failed")
+	}
+
+	if cfg.SentryDSN != "" {
+		if err := sentry.Init(sentry.ClientOptions{
+			Dsn:         cfg.SentryDSN,
+			Environment: cfg.AppEnv,
+			Release:     os.Getenv("GIT_SHA"),
+		}); err != nil {
+			log.Warn().Err(err).Msg("sentry init failed")
+		} else {
+			defer sentry.Flush(2 * time.Second)
+		}
+	}
+
+	tp, err := observability.InitTracer(cfg.OTelServiceName, cfg.OTelExporter)
+	if err != nil {
+		log.Warn().Err(err).Msg("otel tracer init failed")
+	} else {
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			_ = tp.Shutdown(ctx)
+		}()
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
