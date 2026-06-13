@@ -84,6 +84,13 @@ make clean      # 停止基础设施并清理卷
 - `UserService.GetMe` 会根据 Clerk ID 自动创建/读取本地用户记录。
 - 移动端使用 `@clerk/expo` + `expo-secure-store` 管理会话，`TokenBridge` 把 `getToken()` 注入 API transport 的 `Authorization` 头。
 
+## Deployment
+
+- 后端镜像：`apps/backend/Dockerfile`（多阶段构建，Alpine 运行）。
+- 本地类生产栈：`docker-compose.prod.yml`。
+- 平台配置：`fly.toml`、`render.yaml`、`railway.toml`。
+- 详细说明见 `docs/Tech/deployment.md`。
+
 ## Code Style
 
 - Go：标准 Go 风格，`gofmt` + `go vet`。
