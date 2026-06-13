@@ -1,19 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mood, MOODS } from '@still/shared-types';
 import { colors, spacing, typography, ErrorState, QuietButton } from '@still/design-system';
 import { CreateStackParamList } from '../../navigation/types';
 import { analyzeImage, createPost, getUploadURL, uploadImage } from '../../services/postApi';
+import { clearDraft, loadDraft, saveDraft } from '../../services/draftStorage';
 import { useStore } from '../../store/useStore';
 
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateEdit'>;
@@ -24,7 +17,9 @@ export function CreateEditScreen({ route, navigation }: Props) {
   const { imageUri } = route.params;
   const addPost = useStore((state) => state.addPost);
 
-  const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing' | 'error'>('uploading');
+  const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing' | 'error'>(
+    'uploading'
+  );
   const [loadingText, setLoadingText] = useState(LOADING_TEXTS[0]);
   const [publicUrl, setPublicUrl] = useState('');
   const [mood, setMood] = useState<Mood>('still');
@@ -55,9 +50,20 @@ export function CreateEditScreen({ route, navigation }: Props) {
 
       setStep('analyzing');
       const result = await analyzeImage(pub);
-      setMood(result.mood);
-      setTitle(result.title);
-      setDescription(result.description);
+
+      const draft = await loadDraft();
+      if (draft && draft.imageUri === imageUri) {
+        setMood(draft.mood);
+        setTitle(draft.title);
+        setDescription(draft.description);
+        if (draft.publicUrl) {
+          setPublicUrl(draft.publicUrl);
+        }
+      } else {
+        setMood(result.mood);
+        setTitle(result.title);
+        setDescription(result.description);
+      }
       setStep('editing');
     } catch (err) {
       console.error('prepare failed', err);
@@ -71,6 +77,18 @@ export function CreateEditScreen({ route, navigation }: Props) {
     prepare();
   }, [prepare]);
 
+  useEffect(() => {
+    if (step !== 'editing') return;
+    saveDraft({
+      imageUri,
+      publicUrl,
+      mood,
+      title,
+      description,
+      savedAt: new Date().toISOString(),
+    });
+  }, [step, imageUri, publicUrl, mood, title, description]);
+
   const publish = useCallback(async () => {
     if (!publicUrl) return;
     setStep('publishing');
@@ -82,6 +100,7 @@ export function CreateEditScreen({ route, navigation }: Props) {
         title: title.trim(),
         description: description.trim(),
       });
+      await clearDraft();
       addPost(post);
       navigation.replace('CreateSuccess', { postId: post.id });
     } catch (err) {
@@ -95,7 +114,11 @@ export function CreateEditScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.centered}>
         <Text style={styles.loadingText}>
-          {step === 'uploading' ? 'Uploading…' : step === 'publishing' ? 'Publishing…' : loadingText}
+          {step === 'uploading'
+            ? 'Uploading…'
+            : step === 'publishing'
+              ? 'Publishing…'
+              : loadingText}
         </Text>
       </SafeAreaView>
     );

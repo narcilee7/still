@@ -12,7 +12,7 @@ export const MOODS = [
   'returning',
 ] as const;
 
-export type Mood = typeof MOODS[number];
+export type Mood = (typeof MOODS)[number];
 
 export interface Post {
   id: string;

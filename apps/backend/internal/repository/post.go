@@ -128,6 +128,50 @@ func (r *PostRepository) UpdateResonanceCount(ctx context.Context, postID string
 	return err
 }
 
+// UpdatePost updates a post's mood, title and description if it belongs to userID.
+func (r *PostRepository) UpdatePost(ctx context.Context, postID, userID, mood, title, description string) (*stillv1.Post, error) {
+	var id string
+	var createdAt time.Time
+	var imageURL string
+	var status string
+	var resonanceCount int32
+	err := r.pool.QueryRow(ctx, `
+		UPDATE posts
+		SET mood = $3, title = $4, description = $5
+		WHERE id = $1 AND user_id = $2
+		RETURNING id, image_url, status, created_at, resonance_count
+	`, postID, userID, mood, title, description).Scan(&id, &imageURL, &status, &createdAt, &resonanceCount)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("post not found or not owned by user")
+		}
+		return nil, fmt.Errorf("update post failed: %w", err)
+	}
+	return &stillv1.Post{
+		Id:             id,
+		UserId:         userID,
+		ImageUrl:       imageURL,
+		Mood:           mood,
+		Title:          title,
+		Description:    description,
+		Status:         parseStatus(status),
+		CreatedAt:      timestamppb.New(createdAt),
+		ResonanceCount: resonanceCount,
+	}, nil
+}
+
+// DeletePost removes a post if it belongs to userID.
+func (r *PostRepository) DeletePost(ctx context.Context, postID, userID string) error {
+	res, err := r.pool.Exec(ctx, `DELETE FROM posts WHERE id = $1 AND user_id = $2`, postID, userID)
+	if err != nil {
+		return fmt.Errorf("delete post failed: %w", err)
+	}
+	if res.RowsAffected() == 0 {
+		return fmt.Errorf("post not found or not owned by user")
+	}
+	return nil
+}
+
 func (r *PostRepository) scanPost(ctx context.Context, sql string, args ...any) (*stillv1.Post, error) {
 	row := r.pool.QueryRow(ctx, sql, args...)
 	return scanPostRow(row)

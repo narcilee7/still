@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"connectrpc.com/connect"
+	"github.com/getsentry/sentry-go/http"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/still-mvp/still/apps/backend/gen/still/v1/stillv1connect"
 	"github.com/still-mvp/still/apps/backend/internal/ai"
@@ -54,10 +56,16 @@ func New(addr string, pool *pgxpool.Pool, analyzer ai.Analyzer, store storage.St
 		_, _ = w.Write([]byte("ok"))
 	}))
 
+	sentryHandler := sentryhttp.New(sentryhttp.Options{})
+	otelHandler := otelhttp.NewHandler(
+		sentryHandler.Handle(withLogging(withCORS(mux, cfg))),
+		"still-http",
+	)
+
 	return &Server{
 		http: &http.Server{
 			Addr:    addr,
-			Handler: withLogging(withCORS(mux, cfg)),
+			Handler: otelHandler,
 		},
 	}
 }

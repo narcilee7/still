@@ -1,26 +1,20 @@
-import React, { useState } from "react";
-import {
-  Dimensions,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-} from "react-native";
-import { Post } from "@still/shared-types";
-import { colors, spacing, typography } from "../theme";
-import { MoodTag } from "./MoodTag";
-import { ResonateButton } from "./ResonateButton";
+import React, { useState } from 'react';
+import { Dimensions, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
+import { Post } from '@still/shared-types';
+import { colors, spacing, typography } from '../theme';
+import { MoodTag } from './MoodTag';
+import { ResonateButton } from './ResonateButton';
 
-const { height: screenHeight } = Dimensions.get("window");
+const { height: screenHeight } = Dimensions.get('window');
 
 export interface PostCardProps {
   post: Post;
-  variant: "full" | "compact";
+  variant: 'full' | 'compact';
   resonated?: boolean;
   onResonate?: () => void;
   onShare?: () => void;
+  onPress?: () => void;
   style?: ViewStyle;
 }
 
@@ -30,30 +24,26 @@ export function PostCard({
   resonated,
   onResonate,
   onShare,
+  onPress,
   style,
 }: PostCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  if (variant === "compact") {
+  if (variant === 'compact') {
     return (
-      <View style={[compactStyles.root, style]}>
+      <Pressable onPress={onPress} disabled={!onPress} style={[compactStyles.root, style]}>
         <View style={compactStyles.imageContainer}>
           <Image
             source={{ uri: post.imageUrl }}
-            style={[
-              compactStyles.image,
-              imageLoaded && compactStyles.imageVisible,
-            ]}
-            resizeMode="cover"
-            onLoad={() => setImageLoaded(true)}
+            style={compactStyles.image}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={500}
             onError={() => setImageError(true)}
           />
-          {(!imageLoaded || imageError) && (
+          {imageError && (
             <View style={compactStyles.imagePlaceholder}>
-              {imageError && (
-                <Text style={compactStyles.imagePlaceholderText}>?</Text>
-              )}
+              <Text style={compactStyles.imagePlaceholderText}>?</Text>
             </View>
           )}
         </View>
@@ -73,25 +63,24 @@ export function PostCard({
             />
           </View>
         </View>
-      </View>
+      </Pressable>
     );
   }
 
   return (
-    <View style={[fullStyles.root, style]}>
+    <Pressable onPress={onPress} disabled={!onPress} style={[fullStyles.root, style]}>
       <View style={fullStyles.imageContainer}>
         <Image
           source={{ uri: post.imageUrl }}
-          style={[fullStyles.image, imageLoaded && fullStyles.imageVisible]}
-          resizeMode="cover"
-          onLoad={() => setImageLoaded(true)}
+          style={fullStyles.image}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={500}
           onError={() => setImageError(true)}
         />
-        {(!imageLoaded || imageError) && (
+        {imageError && (
           <View style={fullStyles.imagePlaceholder}>
-            {imageError && (
-              <Text style={fullStyles.imagePlaceholderText}>?</Text>
-            )}
+            <Text style={fullStyles.imagePlaceholderText}>?</Text>
           </View>
         )}
       </View>
@@ -102,23 +91,15 @@ export function PostCard({
         <Text style={fullStyles.description}>{post.description}</Text>
 
         <View style={fullStyles.actions}>
-          <ResonateButton
-            count={post.resonanceCount}
-            resonated={resonated}
-            onPress={onResonate}
-          />
+          <ResonateButton count={post.resonanceCount} resonated={resonated} onPress={onResonate} />
           {onShare && (
-            <Pressable
-              onPress={onShare}
-              style={fullStyles.share}
-              accessibilityRole="button"
-            >
+            <Pressable onPress={onShare} style={fullStyles.share} accessibilityRole="button">
               <Text style={fullStyles.shareLabel}>Share</Text>
             </Pressable>
           )}
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -133,16 +114,12 @@ const fullStyles = StyleSheet.create({
   },
   image: {
     flex: 1,
-    opacity: 0,
-  },
-  imageVisible: {
-    opacity: 1,
   },
   imagePlaceholder: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   imagePlaceholderText: {
     fontSize: typography.title.fontSize,
@@ -154,7 +131,7 @@ const fullStyles = StyleSheet.create({
     paddingTop: spacing.xl,
     paddingBottom: spacing.xxl,
     minHeight: screenHeight * 0.32,
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
   },
   title: {
     fontSize: typography.title.fontSize,
@@ -169,8 +146,8 @@ const fullStyles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   actions: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: spacing.lg,
     gap: spacing.md,
   },
@@ -187,7 +164,7 @@ const fullStyles = StyleSheet.create({
 
 const compactStyles = StyleSheet.create({
   root: {
-    flexDirection: "row",
+    flexDirection: 'row',
     backgroundColor: colors.background,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -198,22 +175,18 @@ const compactStyles = StyleSheet.create({
     height: 110,
     borderRadius: 8,
     backgroundColor: colors.border,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   image: {
     width: 88,
     height: 110,
-    opacity: 0,
     backgroundColor: colors.border,
-  },
-  imageVisible: {
-    opacity: 1,
   },
   imagePlaceholder: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   imagePlaceholderText: {
     fontSize: typography.title.fontSize,
@@ -222,7 +195,7 @@ const compactStyles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   title: {
     fontSize: typography.title.fontSize,

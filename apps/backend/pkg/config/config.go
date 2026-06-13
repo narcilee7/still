@@ -23,6 +23,11 @@ type Config struct {
 	CORSAllowedOrigins string
 
 	ClerkSecretKey string
+
+	SentryDSN string
+
+	OTelExporter   string
+	OTelServiceName string
 }
 
 // Load loads configuration from environment variables.
@@ -44,6 +49,11 @@ func Load() *Config {
 		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "*"),
 
 		ClerkSecretKey: getEnv("CLERK_SECRET_KEY", ""),
+
+		SentryDSN: getEnv("SENTRY_DSN", ""),
+
+		OTelExporter:    getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+		OTelServiceName: getEnv("OTEL_SERVICE_NAME", "still-backend"),
 	}
 }
 

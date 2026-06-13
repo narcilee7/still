@@ -14,10 +14,12 @@ import (
 	"github.com/still-mvp/still/apps/backend/internal/repository"
 )
 
-// PostStore creates and reads posts.
+// PostStore creates, reads, updates and deletes posts.
 type PostStore interface {
 	CreatePost(ctx context.Context, userID, imageURL, mood, title, description, status string) (*stillv1.Post, error)
 	GetPost(ctx context.Context, id string) (*stillv1.Post, error)
+	UpdatePost(ctx context.Context, postID, userID, mood, title, description string) (*stillv1.Post, error)
+	DeletePost(ctx context.Context, postID, userID string) error
 }
 
 // AnalysisStore persists raw AI analysis results.
@@ -118,4 +120,43 @@ func (s *Service) GetPost(ctx context.Context, req *connect.Request[stillv1.GetP
 		return nil, connect.NewError(code, err)
 	}
 	return connect.NewResponse(&stillv1.GetPostResponse{Post: post}), nil
+}
+
+// UpdatePost updates a post owned by the current user.
+func (s *Service) UpdatePost(ctx context.Context, req *connect.Request[stillv1.UpdatePostRequest]) (*connect.Response[stillv1.UpdatePostResponse], error) {
+	if strings.TrimSpace(req.Msg.Id) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+	}
+	user, err := auth.CurrentUser(ctx, s.userRepo)
+	if err != nil {
+		return nil, err
+	}
+	post, err := s.postRepo.UpdatePost(ctx, req.Msg.Id, user.Id, req.Msg.Mood, req.Msg.Title, req.Msg.Description)
+	if err != nil {
+		code := connect.CodeInternal
+		if strings.Contains(err.Error(), "not found or not owned") {
+			code = connect.CodeNotFound
+		}
+		return nil, connect.NewError(code, err)
+	}
+	return connect.NewResponse(&stillv1.UpdatePostResponse{Post: post}), nil
+}
+
+// DeletePost removes a post owned by the current user.
+func (s *Service) DeletePost(ctx context.Context, req *connect.Request[stillv1.DeletePostRequest]) (*connect.Response[stillv1.DeletePostResponse], error) {
+	if strings.TrimSpace(req.Msg.Id) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("id is required"))
+	}
+	user, err := auth.CurrentUser(ctx, s.userRepo)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.postRepo.DeletePost(ctx, req.Msg.Id, user.Id); err != nil {
+		code := connect.CodeInternal
+		if strings.Contains(err.Error(), "not found or not owned") {
+			code = connect.CodeNotFound
+		}
+		return nil, connect.NewError(code, err)
+	}
+	return connect.NewResponse(&stillv1.DeletePostResponse{}), nil
 }

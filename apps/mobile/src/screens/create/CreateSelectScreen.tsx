@@ -9,8 +9,10 @@ import { CreateStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateSelect'>;
 
 export function CreateSelectScreen({ navigation }: Props) {
-  const [mediaPermissionStatus, setMediaPermissionStatus] = useState<ImagePicker.PermissionStatus | null>(null);
-  const [cameraPermissionStatus, setCameraPermissionStatus] = useState<ImagePicker.PermissionStatus | null>(null);
+  const [mediaPermissionStatus, setMediaPermissionStatus] =
+    useState<ImagePicker.PermissionStatus | null>(null);
+  const [cameraPermissionStatus, setCameraPermissionStatus] =
+    useState<ImagePicker.PermissionStatus | null>(null);
 
   useEffect(() => {
     ImagePicker.requestMediaLibraryPermissionsAsync().then((result) => {
@@ -62,23 +64,15 @@ export function CreateSelectScreen({ navigation }: Props) {
 
       <View style={styles.actions}>
         <QuietButton title="Choose from library" onPress={openLibrary} variant="primary" />
-        <QuietButton
-          title="Take photo"
-          onPress={takePhoto}
-          variant="secondary"
-        />
+        <QuietButton title="Take photo" onPress={takePhoto} variant="secondary" />
       </View>
 
       {showMediaPermissionHint && (
-        <Text style={styles.permissionHint}>
-          Gallery access is needed to choose a photo.
-        </Text>
+        <Text style={styles.permissionHint}>Gallery access is needed to choose a photo.</Text>
       )}
       {showCameraPermissionHint && (
         <View style={styles.permissionRow}>
-          <Text style={styles.permissionHint}>
-            Camera access is needed to take a photo.
-          </Text>
+          <Text style={styles.permissionHint}>Camera access is needed to take a photo.</Text>
           <QuietButton title="Open Settings" onPress={openSettings} variant="secondary" />
         </View>
       )}

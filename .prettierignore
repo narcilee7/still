@@ -1,0 +1,6 @@
+node_modules
+apps/backend/bin
+apps/backend/gen
+packages/generated-sdk/src/gen
+.expo
+*.lock

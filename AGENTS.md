@@ -28,16 +28,16 @@ still/
 
 ## Tech Stack
 
-| 层级 | 技术 |
-|------|------|
-| Mobile | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand + Clerk |
-| Backend | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai |
-| API | Protocol Buffers + buf |
-| Database | PostgreSQL |
-| Storage | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2) |
-| AI | OpenAI / Claude / Gemini（统一抽象） |
-| Auth | Clerk（JWT 验证，后端 `internal/auth`） |
-| Observability | zerolog + OpenTelemetry + Sentry |
+| 层级          | 技术                                                                              |
+| ------------- | --------------------------------------------------------------------------------- |
+| Mobile        | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand + Clerk |
+| Backend       | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai                        |
+| API           | Protocol Buffers + buf                                                            |
+| Database      | PostgreSQL                                                                        |
+| Storage       | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2)                                |
+| AI            | OpenAI / Claude / Gemini（统一抽象）                                              |
+| Auth          | Clerk（JWT 验证，后端 `internal/auth`）                                           |
+| Observability | zerolog + OpenTelemetry + Sentry                                                  |
 
 ## Key Principles
 
@@ -58,11 +58,15 @@ make help
 make install
 make env        # 然后编辑 apps/backend/.env.development 填入 OPENAI_API_KEY 和 CLERK_SECRET_KEY
                 # 编辑 apps/mobile/.env.development 填入 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
-make infra
+make infra-up   # 启动本地 PostgreSQL + MinIO
 
 # 启动后端（端口 8080）和移动端
 make backend    # 读取 apps/backend/.env.development
 make mobile     # 读取 apps/mobile/.env.development
+
+# Docker / 部署
+make docker-build      # 构建后端 Docker 镜像
+make docker-prod-up    # 本地启动类生产容器栈
 
 # 其他常用命令
 make proto      # 生成 Proto SDK
@@ -79,6 +83,13 @@ make clean      # 停止基础设施并清理卷
 - `users.clerk_user_id` 映射到 Clerk 的 `user_xxx`，内部仍使用 UUID 主键。
 - `UserService.GetMe` 会根据 Clerk ID 自动创建/读取本地用户记录。
 - 移动端使用 `@clerk/expo` + `expo-secure-store` 管理会话，`TokenBridge` 把 `getToken()` 注入 API transport 的 `Authorization` 头。
+
+## Deployment
+
+- 后端镜像：`apps/backend/Dockerfile`（多阶段构建，Alpine 运行）。
+- 本地类生产栈：`docker-compose.prod.yml`。
+- 平台配置：`fly.toml`、`render.yaml`、`railway.toml`。
+- 详细说明见 `docs/Tech/deployment.md`。
 
 ## Code Style
 

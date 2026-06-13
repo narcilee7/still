@@ -3,12 +3,14 @@ import { createConnectTransport } from '@connectrpc/connect-web';
 import {
   AnalyzeService,
   CreatePostRequest,
+  DeletePostRequest,
   FeedService,
   GetProfileRequest,
   GetUploadURLRequest,
   PostService,
   ResonateService,
   StorageService,
+  UpdatePostRequest,
   UserService,
 } from '@still/generated-sdk';
 import { Mood, Post, User } from '@still/shared-types';
@@ -48,16 +50,19 @@ export interface ProfileResult {
   resonancesCount: number;
 }
 
-function mapProtoPost(p: any): Post {
+function mapProtoPost(p: unknown): Post {
+  const proto = p as Record<string, unknown>;
   return {
-    id: p.id,
-    userId: p.userId,
-    imageUrl: p.imageUrl,
-    mood: p.mood as Mood,
-    title: p.title,
-    description: p.description,
-    createdAt: p.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
-    resonanceCount: p.resonanceCount ?? 0,
+    id: String(proto.id ?? ''),
+    userId: String(proto.userId ?? ''),
+    imageUrl: String(proto.imageUrl ?? ''),
+    mood: String(proto.mood ?? 'still') as Mood,
+    title: String(proto.title ?? ''),
+    description: String(proto.description ?? ''),
+    createdAt:
+      (proto.createdAt as { toDate?: () => Date } | undefined)?.toDate?.().toISOString() ??
+      new Date().toISOString(),
+    resonanceCount: Number(proto.resonanceCount ?? 0),
   };
 }
 
@@ -97,6 +102,31 @@ export async function createPost(payload: {
   });
   const res = await postClient.createPost(req);
   return mapProtoPost(res.post);
+}
+
+export async function getPost(postId: string): Promise<Post> {
+  const res = await postClient.getPost({ id: postId });
+  return mapProtoPost(res.post);
+}
+
+export async function updatePost(payload: {
+  id: string;
+  mood: Mood;
+  title: string;
+  description: string;
+}): Promise<Post> {
+  const req = new UpdatePostRequest({
+    id: payload.id,
+    mood: payload.mood,
+    title: payload.title,
+    description: payload.description,
+  });
+  const res = await postClient.updatePost(req);
+  return mapProtoPost(res.post);
+}
+
+export async function deletePost(postId: string): Promise<void> {
+  await postClient.deletePost(new DeletePostRequest({ id: postId }));
 }
 
 export interface ResonateResult {
