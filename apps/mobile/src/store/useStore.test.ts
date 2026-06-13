@@ -1,9 +1,9 @@
 import { useStore } from './useStore';
-import { DEFAULT_USER } from '../data/defaultUser';
+import { GUEST_USER } from '../data/defaultUser';
 
 const createPost = (id: string, overrides = {}) => ({
   id,
-  userId: DEFAULT_USER.id,
+  userId: GUEST_USER.id,
   imageUrl: 'https://example.com/photo.jpg',
   mood: 'still' as const,
   title: 'A moment',
@@ -17,7 +17,7 @@ describe('useStore', () => {
   beforeEach(() => {
     useStore.setState({
       posts: [],
-      user: DEFAULT_USER,
+      user: GUEST_USER,
       resonatedPostIds: new Set(),
     });
   });

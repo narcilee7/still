@@ -4,10 +4,12 @@ package still.v1;
 
 option go_package = "github.com/still-mvp/still/apps/backend/gen/still/v1;stillv1";
 
+import "google/protobuf/empty.proto";
 import "still/v1/common.proto";
 
 service UserService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc GetMe(google.protobuf.Empty) returns (GetMeResponse);
 }
 
 message GetProfileRequest {
@@ -18,4 +20,8 @@ message GetProfileResponse {
   User user = 1;
   int32 posts_count = 2;
   int32 resonances_count = 3;
+}
+
+message GetMeResponse {
+  User user = 1;
 }

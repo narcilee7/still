@@ -41,14 +41,19 @@ export function PostCard({
         <View style={compactStyles.imageContainer}>
           <Image
             source={{ uri: post.imageUrl }}
-            style={[compactStyles.image, imageLoaded && compactStyles.imageVisible]}
+            style={[
+              compactStyles.image,
+              imageLoaded && compactStyles.imageVisible,
+            ]}
             resizeMode="cover"
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
           />
           {(!imageLoaded || imageError) && (
             <View style={compactStyles.imagePlaceholder}>
-              {imageError && <Text style={compactStyles.imagePlaceholderText}>?</Text>}
+              {imageError && (
+                <Text style={compactStyles.imagePlaceholderText}>?</Text>
+              )}
             </View>
           )}
         </View>
@@ -84,7 +89,9 @@ export function PostCard({
         />
         {(!imageLoaded || imageError) && (
           <View style={fullStyles.imagePlaceholder}>
-            {imageError && <Text style={fullStyles.imagePlaceholderText}>?</Text>}
+            {imageError && (
+              <Text style={fullStyles.imagePlaceholderText}>?</Text>
+            )}
           </View>
         )}
       </View>

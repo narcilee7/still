@@ -6,8 +6,10 @@ import (
 	"strings"
 
 	"connectrpc.com/connect"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	stillv1 "github.com/still-mvp/still/apps/backend/gen/still/v1"
+	"github.com/still-mvp/still/apps/backend/internal/auth"
 	"github.com/still-mvp/still/apps/backend/internal/repository"
 )
 
@@ -23,6 +25,15 @@ func NewService(userRepo *repository.UserRepository, resonanceRepo *repository.R
 		userRepo:      userRepo,
 		resonanceRepo: resonanceRepo,
 	}
+}
+
+// GetMe returns the currently authenticated user.
+func (s *Service) GetMe(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[stillv1.GetMeResponse], error) {
+	user, err := auth.CurrentUser(ctx, s.userRepo)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(&stillv1.GetMeResponse{User: user}), nil
 }
 
 // GetProfile returns a user's profile.

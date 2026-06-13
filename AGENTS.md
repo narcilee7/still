@@ -30,13 +30,13 @@ still/
 
 | 层级 | 技术 |
 |------|------|
-| Mobile | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand |
+| Mobile | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand + Clerk |
 | Backend | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai |
 | API | Protocol Buffers + buf |
 | Database | PostgreSQL |
 | Storage | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2) |
 | AI | OpenAI / Claude / Gemini（统一抽象） |
-| Auth | Clerk（推荐）或 Supabase Auth |
+| Auth | Clerk（JWT 验证，后端 `internal/auth`） |
 | Observability | zerolog + OpenTelemetry + Sentry |
 
 ## Key Principles
@@ -46,6 +46,7 @@ still/
 3. **Mood Dictionary**：AI 必须从固定 Mood 词库中选择，不能自由生成。
 4. **Quiet UI**：安静、轻盈、留白。避免科技感、AI 感、社交媒体感。
 5. **User is Author**：AI 只是辅助，用户可编辑 mood/title/description。
+6. **Auth Required**：V1 除 `/health` 外，所有 RPC 都需要 Clerk Bearer Token；未登录用户进入 `AuthStack` 登录。
 
 ## Development Commands
 
@@ -55,7 +56,8 @@ make help
 
 # 一键：安装依赖、生成环境文件、启动基础设施
 make install
-make env        # 然后编辑 apps/backend/.env.development 填入 OPENAI_API_KEY
+make env        # 然后编辑 apps/backend/.env.development 填入 OPENAI_API_KEY 和 CLERK_SECRET_KEY
+                # 编辑 apps/mobile/.env.development 填入 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
 make infra
 
 # 启动后端（端口 8080）和移动端
@@ -70,6 +72,13 @@ make test       # 运行测试
 make migrate    # 数据库迁移 up
 make clean      # 停止基础设施并清理卷
 ```
+
+## Authentication
+
+- 后端通过 `internal/auth` 验证 Clerk JWT，并将 `clerk_user_id` 写入请求上下文。
+- `users.clerk_user_id` 映射到 Clerk 的 `user_xxx`，内部仍使用 UUID 主键。
+- `UserService.GetMe` 会根据 Clerk ID 自动创建/读取本地用户记录。
+- 移动端使用 `@clerk/expo` + `expo-secure-store` 管理会话，`TokenBridge` 把 `getToken()` 注入 API transport 的 `Authorization` 头。
 
 ## Code Style
 

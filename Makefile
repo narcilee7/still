@@ -10,10 +10,10 @@ install: ## Install all workspace dependencies
 proto: ## Generate Go server code and TypeScript SDK from proto files
 	yarn generate:proto
 
-env: ## Copy .env.example into dev env files (will not overwrite existing files)
-	cp -n .env.example apps/backend/.env.development 2>/dev/null || true
-	cp -n .env.example apps/mobile/.env.development 2>/dev/null || true
-	@echo "Dev env files created. Edit them to add OPENAI_API_KEY and other secrets."
+env: ## Copy per-app .env.example into dev env files (will not overwrite existing files)
+	cp -n apps/backend/.env.example apps/backend/.env.development 2>/dev/null || true
+	cp -n apps/mobile/.env.example apps/mobile/.env.development 2>/dev/null || true
+	@echo "Dev env files created. Edit them to add OPENAI_API_KEY, CLERK_SECRET_KEY and EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY."
 
 infra-up: ## Start local infrastructure (PostgreSQL + MinIO)
 	docker compose up -d
