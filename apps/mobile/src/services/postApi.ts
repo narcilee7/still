@@ -3,12 +3,14 @@ import { createConnectTransport } from '@connectrpc/connect-web';
 import {
   AnalyzeService,
   CreatePostRequest,
+  DeletePostRequest,
   FeedService,
   GetProfileRequest,
   GetUploadURLRequest,
   PostService,
   ResonateService,
   StorageService,
+  UpdatePostRequest,
   UserService,
 } from '@still/generated-sdk';
 import { Mood, Post, User } from '@still/shared-types';
@@ -100,6 +102,31 @@ export async function createPost(payload: {
   });
   const res = await postClient.createPost(req);
   return mapProtoPost(res.post);
+}
+
+export async function getPost(postId: string): Promise<Post> {
+  const res = await postClient.getPost({ id: postId });
+  return mapProtoPost(res.post);
+}
+
+export async function updatePost(payload: {
+  id: string;
+  mood: Mood;
+  title: string;
+  description: string;
+}): Promise<Post> {
+  const req = new UpdatePostRequest({
+    id: payload.id,
+    mood: payload.mood,
+    title: payload.title,
+    description: payload.description,
+  });
+  const res = await postClient.updatePost(req);
+  return mapProtoPost(res.post);
+}
+
+export async function deletePost(postId: string): Promise<void> {
+  await postClient.deletePost(new DeletePostRequest({ id: postId }));
 }
 
 export interface ResonateResult {

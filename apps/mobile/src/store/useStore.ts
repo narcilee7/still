@@ -11,6 +11,7 @@ interface AppState {
   appendPosts: (posts: Post[]) => void;
   addPost: (post: Post) => void;
   updatePost: (postId: string, patch: Partial<Post>) => void;
+  removePost: (postId: string) => void;
   setUser: (user: CurrentUser | ((prev: CurrentUser) => CurrentUser)) => void;
   toggleResonate: (postId: string) => void;
   setResonated: (postId: string, resonated: boolean) => void;
@@ -46,6 +47,15 @@ export const useStore = create<AppState>((set) => ({
   updatePost: (postId, patch) =>
     set((state) => ({
       posts: state.posts.map((p) => (p.id === postId ? { ...p, ...patch } : p)),
+    })),
+
+  removePost: (postId) =>
+    set((state) => ({
+      posts: state.posts.filter((p) => p.id !== postId),
+      user: {
+        ...state.user,
+        postsCount: Math.max(0, state.user.postsCount - 1),
+      },
     })),
 
   setUser: (user) =>

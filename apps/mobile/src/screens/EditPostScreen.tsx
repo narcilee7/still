@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { useStore } from '../store/useStore';
+import { updatePost } from '../services/postApi';
 import { colors, spacing, typography, QuietButton } from '@still/design-system';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditPost'>;
@@ -11,18 +12,33 @@ type Props = NativeStackScreenProps<RootStackParamList, 'EditPost'>;
 export function EditPostScreen({ route, navigation }: Props) {
   const { postId } = route.params;
   const post = useStore((state) => state.posts.find((p) => p.id === postId));
+  const updatePostInStore = useStore((state) => state.updatePost);
   const [title, setTitle] = useState(post?.title ?? '');
   const [description, setDescription] = useState(post?.description ?? '');
   const [saving, setSaving] = useState(false);
 
   const save = useCallback(async () => {
-    // TODO: wire updatePost API
+    if (!post) return;
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const updated = await updatePost({
+        id: postId,
+        mood: post.mood,
+        title: title.trim(),
+        description: description.trim(),
+      });
+      updatePostInStore(postId, {
+        title: updated.title,
+        description: updated.description,
+        mood: updated.mood,
+      });
       navigation.goBack();
-    }, 500);
-  }, [navigation]);
+    } catch (err) {
+      console.error('update post failed', err);
+    } finally {
+      setSaving(false);
+    }
+  }, [post, postId, title, description, updatePostInStore, navigation]);
 
   if (!post) {
     return (

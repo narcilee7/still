@@ -1,10 +1,11 @@
 import React, { useCallback } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { RootStackParamList } from '../navigation/types';
 import { useStore } from '../store/useStore';
+import { deletePost } from '../services/postApi';
 import { colors, spacing, typography, QuietButton } from '@still/design-system';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostDetail'>;
@@ -13,6 +14,7 @@ export function PostDetailScreen({ route, navigation }: Props) {
   const { postId } = route.params;
   const post = useStore((state) => state.posts.find((p) => p.id === postId));
   const user = useStore((state) => state.user);
+  const removePost = useStore((state) => state.removePost);
   const isOwner = post?.userId === user.id;
 
   const handleShare = useCallback(async () => {
@@ -25,6 +27,26 @@ export function PostDetailScreen({ route, navigation }: Props) {
       console.error('share failed', err);
     }
   }, [post]);
+
+  const handleDelete = useCallback(() => {
+    if (!post) return;
+    Alert.alert('Delete moment?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deletePost(post.id);
+            removePost(post.id);
+            navigation.goBack();
+          } catch (err) {
+            console.error('delete post failed', err);
+          }
+        },
+      },
+    ]);
+  }, [post, removePost, navigation]);
 
   if (!post) {
     return (
@@ -59,11 +81,14 @@ export function PostDetailScreen({ route, navigation }: Props) {
         <View style={styles.actions}>
           <QuietButton title="Share" variant="secondary" onPress={handleShare} />
           {isOwner && (
-            <QuietButton
-              title="Edit"
-              variant="secondary"
-              onPress={() => navigation.navigate('EditPost', { postId: post.id })}
-            />
+            <>
+              <QuietButton
+                title="Edit"
+                variant="secondary"
+                onPress={() => navigation.navigate('EditPost', { postId: post.id })}
+              />
+              <QuietButton title="Delete" variant="secondary" onPress={handleDelete} />
+            </>
           )}
         </View>
       </ScrollView>

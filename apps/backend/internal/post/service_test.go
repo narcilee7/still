@@ -41,6 +41,20 @@ func (f *fakePostStore) GetPost(ctx context.Context, id string) (*stillv1.Post, 
 	return &stillv1.Post{Id: id}, nil
 }
 
+func (f *fakePostStore) UpdatePost(ctx context.Context, postID, userID, mood, title, description string) (*stillv1.Post, error) {
+	return &stillv1.Post{
+		Id:          postID,
+		UserId:      userID,
+		Mood:        mood,
+		Title:       title,
+		Description: description,
+	}, nil
+}
+
+func (f *fakePostStore) DeletePost(ctx context.Context, postID, userID string) error {
+	return nil
+}
+
 type fakeAnalysisStore struct {
 	saved bool
 	err   error

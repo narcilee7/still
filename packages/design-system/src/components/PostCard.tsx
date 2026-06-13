@@ -3,7 +3,7 @@ import { Dimensions, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-
 import { Image } from 'expo-image';
 import { Post } from '@still/shared-types';
 import { colors, spacing, typography } from '../theme';
-import { MoodTag } from './MoodTag'
+import { MoodTag } from './MoodTag';
 import { ResonateButton } from './ResonateButton';
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -31,11 +31,7 @@ export function PostCard({
 
   if (variant === 'compact') {
     return (
-      <Pressable
-        onPress={onPress}
-        disabled={!onPress}
-        style={[compactStyles.root, style]}
-      >
+      <Pressable onPress={onPress} disabled={!onPress} style={[compactStyles.root, style]}>
         <View style={compactStyles.imageContainer}>
           <Image
             source={{ uri: post.imageUrl }}
@@ -72,11 +68,7 @@ export function PostCard({
   }
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      style={[fullStyles.root, style]}
-    >
+    <Pressable onPress={onPress} disabled={!onPress} style={[fullStyles.root, style]}>
       <View style={fullStyles.imageContainer}>
         <Image
           source={{ uri: post.imageUrl }}
