@@ -61,4 +61,7 @@ apps/backend/gen/
 docs/
 
 .env
+.env.development
+.env.production
+apps/**/.env.development
 apps/**/.env.production

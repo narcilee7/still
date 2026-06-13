@@ -50,26 +50,25 @@ still/
 ## Development Commands
 
 ```bash
-# 安装所有依赖
-yarn install
+# 查看所有可用命令
+make help
 
-# 生成 Proto SDK
-yarn generate:proto
+# 一键：安装依赖、生成环境文件、启动基础设施
+make install
+make env        # 然后编辑 apps/backend/.env.development 填入 OPENAI_API_KEY
+make infra
 
-# 启动基础设施（PostgreSQL + MinIO for S3 dev）
-docker compose up -d
+# 启动后端（端口 8080）和移动端
+make backend    # 读取 apps/backend/.env.development
+make mobile     # 读取 apps/mobile/.env.development
 
-# 配置环境变量后启动后端（端口 8080）
-# 开发默认读取 apps/backend/.env.development
-cp .env.example apps/backend/.env.development
-# 编辑 .env.development 填入 OPENAI_API_KEY 后：
-yarn dev:backend
-
-# 启动移动端 Expo（读取 apps/mobile/.env.development）
-cd apps/mobile && yarn start
-
-# 运行数据库迁移（需要本地 PostgreSQL）
-yarn migrate up
+# 其他常用命令
+make proto      # 生成 Proto SDK
+make build      # 构建所有 workspace
+make lint       # 运行 linter
+make test       # 运行测试
+make migrate    # 数据库迁移 up
+make clean      # 停止基础设施并清理卷
 ```
 
 ## Code Style
