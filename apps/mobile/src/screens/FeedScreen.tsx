@@ -9,9 +9,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Post } from '@still/shared-types';
 import { EmptyState, ErrorState, LoadingSpinner, PostCard, colors } from '@still/design-system';
 import { listFeed, resonate } from '../services/postApi';
+import { RootStackParamList } from '../navigation/types';
 import { useStore } from '../store/useStore';
 
 const { height: WINDOW_HEIGHT } = Dimensions.get('window');
@@ -19,6 +22,7 @@ const { height: WINDOW_HEIGHT } = Dimensions.get('window');
 type LoadState = 'idle' | 'loading' | 'error';
 
 export function FeedScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const posts = useStore((state) => state.posts);
   const setPosts = useStore((state) => state.setPosts);
   const appendPosts = useStore((state) => state.appendPosts);
@@ -109,10 +113,11 @@ export function FeedScreen() {
         resonated={resonatedIds.has(item.id)}
         onResonate={() => handleResonate(item.id)}
         onShare={() => handleShare(item)}
+        onPress={() => navigation.navigate('PostDetail', { postId: item.id })}
         style={{ height: listHeight }}
       />
     ),
-    [listHeight, resonatedIds, handleResonate, handleShare]
+    [listHeight, resonatedIds, handleResonate, handleShare, navigation]
   );
 
   const keyExtractor = useCallback((item: Post) => item.id, []);

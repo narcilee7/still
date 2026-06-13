@@ -14,15 +14,28 @@ export interface PostCardProps {
   resonated?: boolean;
   onResonate?: () => void;
   onShare?: () => void;
+  onPress?: () => void;
   style?: ViewStyle;
 }
 
-export function PostCard({ post, variant, resonated, onResonate, onShare, style }: PostCardProps) {
+export function PostCard({
+  post,
+  variant,
+  resonated,
+  onResonate,
+  onShare,
+  onPress,
+  style,
+}: PostCardProps) {
   const [imageError, setImageError] = useState(false);
 
   if (variant === 'compact') {
     return (
-      <View style={[compactStyles.root, style]}>
+      <Pressable
+        onPress={onPress}
+        disabled={!onPress}
+        style={[compactStyles.root, style]}
+      >
         <View style={compactStyles.imageContainer}>
           <Image
             source={{ uri: post.imageUrl }}
@@ -54,12 +67,16 @@ export function PostCard({ post, variant, resonated, onResonate, onShare, style 
             />
           </View>
         </View>
-      </View>
+      </Pressable>
     );
   }
 
   return (
-    <View style={[fullStyles.root, style]}>
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={[fullStyles.root, style]}
+    >
       <View style={fullStyles.imageContainer}>
         <Image
           source={{ uri: post.imageUrl }}
@@ -90,7 +107,7 @@ export function PostCard({ post, variant, resonated, onResonate, onShare, style 
           )}
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

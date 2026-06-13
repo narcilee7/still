@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useAuth } from '@clerk/expo';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Post } from '@still/shared-types';
 import {
@@ -22,12 +24,14 @@ import {
   typography,
 } from '@still/design-system';
 import { getProfile, listFeed, resonate } from '../services/postApi';
+import { RootStackParamList } from '../navigation/types';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 
 type LoadState = 'idle' | 'loading' | 'error';
 
 export function ProfileScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const user = useStore((state) => state.user);
   const posts = useStore(
     useShallow((state) => state.posts.filter((p) => p.userId === state.user.id))
@@ -91,9 +95,10 @@ export function ProfileScreen() {
         variant="compact"
         resonated={resonatedIds.has(item.id)}
         onResonate={() => handleResonate(item.id)}
+        onPress={() => navigation.navigate('PostDetail', { postId: item.id })}
       />
     ),
-    [resonatedIds, handleResonate]
+    [resonatedIds, handleResonate, navigation]
   );
 
   const keyExtractor = useCallback((item: Post) => item.id, []);

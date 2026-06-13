@@ -1,25 +1,29 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { RootTabParamList } from './types';
-import { FeedScreen } from '../screens/FeedScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
-import { CreateStack } from './CreateStack';
-import { TabBar } from './TabBar';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { RootStackParamList } from './types';
+import { MainNavigator } from './MainNavigator';
+import { PostDetailScreen } from '../screens/PostDetailScreen';
+import { EditPostScreen } from '../screens/EditPostScreen';
 
-const Tab = createBottomTabNavigator<RootTabParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        tabBar={(props) => <TabBar {...props} />}
-        screenOptions={{ headerShown: false }}
-      >
-        <Tab.Screen name="Feed" component={FeedScreen} />
-        <Tab.Screen name="Create" component={CreateStack} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
-      </Tab.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Main" component={MainNavigator} />
+        <Stack.Screen
+          name="PostDetail"
+          component={PostDetailScreen}
+          options={{ animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="EditPost"
+          component={EditPostScreen}
+          options={{ animation: 'slide_from_bottom' }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
