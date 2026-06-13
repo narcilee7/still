@@ -9,9 +9,12 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 
+	"connectrpc.com/connect"
+
 	"github.com/still-mvp/still/apps/backend/gen/still/v1/stillv1connect"
 	"github.com/still-mvp/still/apps/backend/internal/ai"
 	"github.com/still-mvp/still/apps/backend/internal/analyze"
+	"github.com/still-mvp/still/apps/backend/internal/auth"
 	"github.com/still-mvp/still/apps/backend/internal/feed"
 	"github.com/still-mvp/still/apps/backend/internal/post"
 	"github.com/still-mvp/still/apps/backend/internal/repository"
@@ -35,12 +38,16 @@ func New(addr string, pool *pgxpool.Pool, analyzer ai.Analyzer, store storage.St
 	userRepo := repository.NewUserRepository(pool)
 	analysisRepo := repository.NewAnalysisRepository(pool)
 
-	mux.Handle(stillv1connect.NewFeedServiceHandler(feed.NewService(postRepo)))
-	mux.Handle(stillv1connect.NewPostServiceHandler(post.NewService(postRepo, analysisRepo, analyzer)))
-	mux.Handle(stillv1connect.NewAnalyzeServiceHandler(analyze.NewService(analyzer)))
-	mux.Handle(stillv1connect.NewResonateServiceHandler(resonate.NewService(postRepo, resonanceRepo)))
-	mux.Handle(stillv1connect.NewUserServiceHandler(user.NewService(userRepo, resonanceRepo)))
-	mux.Handle(stillv1connect.NewStorageServiceHandler(storage.NewService(store)))
+	verifier := auth.NewClerkVerifier(cfg.ClerkSecretKey)
+	authInterceptor := auth.NewClerkInterceptor(verifier)
+	opts := connect.WithInterceptors(authInterceptor)
+
+	mux.Handle(stillv1connect.NewFeedServiceHandler(feed.NewService(postRepo), opts))
+	mux.Handle(stillv1connect.NewPostServiceHandler(post.NewService(postRepo, analysisRepo, userRepo, analyzer), opts))
+	mux.Handle(stillv1connect.NewAnalyzeServiceHandler(analyze.NewService(analyzer), opts))
+	mux.Handle(stillv1connect.NewResonateServiceHandler(resonate.NewService(postRepo, resonanceRepo, userRepo), opts))
+	mux.Handle(stillv1connect.NewUserServiceHandler(user.NewService(userRepo, resonanceRepo), opts))
+	mux.Handle(stillv1connect.NewStorageServiceHandler(storage.NewService(store), opts))
 
 	mux.Handle("/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

@@ -10,7 +10,7 @@ import (
 
 	stillv1 "github.com/still-mvp/still/apps/backend/gen/still/v1"
 	"github.com/still-mvp/still/apps/backend/internal/ai"
-	"github.com/still-mvp/still/apps/backend/internal/db"
+	"github.com/still-mvp/still/apps/backend/internal/auth"
 	"github.com/still-mvp/still/apps/backend/internal/repository"
 )
 
@@ -29,14 +29,21 @@ type AnalysisStore interface {
 type Service struct {
 	postRepo     PostStore
 	analysisRepo AnalysisStore
+	userRepo     UserReader
 	analyzer     ai.Analyzer
 }
 
+// UserReader resolves a Clerk identity to an internal user.
+type UserReader interface {
+	GetOrCreateUserByClerkID(ctx context.Context, clerkUserID, username string) (*stillv1.User, error)
+}
+
 // NewService creates a new post service.
-func NewService(postRepo *repository.PostRepository, analysisRepo *repository.AnalysisRepository, analyzer ai.Analyzer) *Service {
+func NewService(postRepo *repository.PostRepository, analysisRepo *repository.AnalysisRepository, userRepo UserReader, analyzer ai.Analyzer) *Service {
 	return &Service{
 		postRepo:     postRepo,
 		analysisRepo: analysisRepo,
+		userRepo:     userRepo,
 		analyzer:     analyzer,
 	}
 }
@@ -73,8 +80,13 @@ func (s *Service) CreatePost(ctx context.Context, req *connect.Request[stillv1.C
 		description = result.Description
 	}
 
+	user, err := auth.CurrentUser(ctx, s.userRepo)
+	if err != nil {
+		return nil, err
+	}
+
 	status := repository.StatusToString(stillv1.PostStatus_POST_STATUS_APPROVED)
-	post, err := s.postRepo.CreatePost(ctx, db.DefaultUserID, req.Msg.ImageUrl, mood, title, description, status)
+	post, err := s.postRepo.CreatePost(ctx, user.Id, req.Msg.ImageUrl, mood, title, description, status)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}

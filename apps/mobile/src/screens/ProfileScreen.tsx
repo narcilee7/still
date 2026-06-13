@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, Image, ListRenderItem, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { useAuth } from '@clerk/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Post } from '@still/shared-types';
-import { EmptyState, ErrorState, LoadingSpinner, PostCard, colors, spacing, typography } from '@still/design-system';
+import { EmptyState, ErrorState, LoadingSpinner, PostCard, QuietButton, colors, spacing, typography } from '@still/design-system';
 import { getProfile, listFeed, resonate } from '../services/postApi';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
@@ -21,6 +22,7 @@ export function ProfileScreen() {
   const updatePost = useStore((state) => state.updatePost);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [refreshing, setRefreshing] = useState(false);
+  const { signOut } = useAuth();
 
   const load = useCallback(async () => {
     try {
@@ -79,6 +81,14 @@ export function ProfileScreen() {
 
   const keyExtractor = useCallback((item: Post) => item.id, []);
 
+  const handleSignOut = useCallback(async () => {
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('sign out failed', err);
+    }
+  }, [signOut]);
+
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.avatar}>
@@ -98,6 +108,9 @@ export function ProfileScreen() {
           <Text style={styles.statNumber}>{user.resonancesCount}</Text>
           <Text style={styles.statLabel}>Resonances</Text>
         </View>
+      </View>
+      <View style={styles.signOut}>
+        <QuietButton title="Sign out" variant="secondary" onPress={handleSignOut} />
       </View>
     </View>
   );
@@ -205,5 +218,9 @@ const styles = StyleSheet.create({
     lineHeight: typography.meta.lineHeight,
     color: colors.secondary,
     marginTop: spacing.xs,
+  },
+  signOut: {
+    marginTop: spacing.xl,
+    minWidth: 160,
   },
 });

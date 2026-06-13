@@ -5,11 +5,11 @@ export interface CurrentUser extends User {
   resonancesCount: number;
 }
 
-// Default user until authentication is implemented.
-// Must match the seeded demo user in apps/backend/internal/db/seed.go.
-export const DEFAULT_USER: CurrentUser = {
-  id: '00000000-0000-0000-0000-000000000001',
-  username: 'still_moments',
+// Placeholder used only while the app is waiting for the authenticated session.
+// The real user is loaded from the backend via /still.v1.UserService/GetMe.
+export const GUEST_USER: CurrentUser = {
+  id: '',
+  username: 'guest',
   avatarUrl: undefined,
   postsCount: 0,
   resonancesCount: 0,

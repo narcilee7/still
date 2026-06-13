@@ -3,11 +3,14 @@ package post
 import (
 	"context"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	stillv1 "github.com/still-mvp/still/apps/backend/gen/still/v1"
 	"github.com/still-mvp/still/apps/backend/internal/ai"
+	"github.com/still-mvp/still/apps/backend/internal/auth"
 )
 
 type fakePostStore struct {
@@ -48,6 +51,22 @@ func (f *fakeAnalysisStore) SaveAnalysis(ctx context.Context, postID, provider, 
 	return f.err
 }
 
+type fakeUserReader struct {
+	user *stillv1.User
+	err  error
+}
+
+func (f *fakeUserReader) GetOrCreateUserByClerkID(ctx context.Context, clerkUserID, username string) (*stillv1.User, error) {
+	if f.user != nil {
+		return f.user, nil
+	}
+	return &stillv1.User{
+		Id:        "user-1",
+		Username:  "test_user",
+		CreatedAt: timestamppb.New(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)),
+	}, f.err
+}
+
 type fakeAnalyzer struct {
 	called bool
 	result *ai.Result
@@ -63,10 +82,12 @@ func TestCreatePost_SkipsAI_WhenAllFieldsProvided(t *testing.T) {
 	postStore := &fakePostStore{}
 	analysisStore := &fakeAnalysisStore{}
 	analyzer := &fakeAnalyzer{}
+	userReader := &fakeUserReader{}
 
 	svc := &Service{
 		postRepo:     postStore,
 		analysisRepo: analysisStore,
+		userRepo:     userReader,
 		analyzer:     analyzer,
 	}
 
@@ -76,8 +97,9 @@ func TestCreatePost_SkipsAI_WhenAllFieldsProvided(t *testing.T) {
 		Title:       "A quiet title",
 		Description: "A short description",
 	})
+	ctx := auth.WithUserID(context.Background(), "clerk_user_123")
 
-	_, err := svc.CreatePost(context.Background(), req)
+	_, err := svc.CreatePost(ctx, req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -100,18 +122,21 @@ func TestCreatePost_CallsAI_WhenFieldsMissing(t *testing.T) {
 			Description: "AI description",
 		},
 	}
+	userReader := &fakeUserReader{}
 
 	svc := &Service{
 		postRepo:     postStore,
 		analysisRepo: analysisStore,
+		userRepo:     userReader,
 		analyzer:     analyzer,
 	}
 
 	req := connect.NewRequest(&stillv1.CreatePostRequest{
 		ImageUrl: "https://example.com/photo.jpg",
 	})
+	ctx := auth.WithUserID(context.Background(), "clerk_user_123")
 
-	_, err := svc.CreatePost(context.Background(), req)
+	_, err := svc.CreatePost(ctx, req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -134,5 +159,24 @@ func TestCreatePost_ValidatesEmptyImageUrl(t *testing.T) {
 	}
 	if connect.CodeOf(err) != connect.CodeInvalidArgument {
 		t.Errorf("expected InvalidArgument, got %v", connect.CodeOf(err))
+	}
+}
+
+func TestCreatePost_RequiresAuthentication(t *testing.T) {
+	svc := &Service{
+		postRepo:     &fakePostStore{},
+		analysisRepo: &fakeAnalysisStore{},
+		userRepo:     &fakeUserReader{},
+		analyzer:     &fakeAnalyzer{},
+	}
+	req := connect.NewRequest(&stillv1.CreatePostRequest{
+		ImageUrl: "https://example.com/photo.jpg",
+		Mood:     "still",
+		Title:    "A quiet title",
+	})
+
+	_, err := svc.CreatePost(context.Background(), req)
+	if connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Errorf("expected Unauthenticated, got %v", connect.CodeOf(err))
 	}
 }

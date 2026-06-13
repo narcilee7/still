@@ -8,7 +8,7 @@ import (
 	"connectrpc.com/connect"
 
 	stillv1 "github.com/still-mvp/still/apps/backend/gen/still/v1"
-	"github.com/still-mvp/still/apps/backend/internal/db"
+	"github.com/still-mvp/still/apps/backend/internal/auth"
 	"github.com/still-mvp/still/apps/backend/internal/repository"
 )
 
@@ -16,13 +16,20 @@ import (
 type Service struct {
 	postRepo      *repository.PostRepository
 	resonanceRepo *repository.ResonanceRepository
+	userRepo      UserReader
+}
+
+// UserReader resolves a Clerk identity to an internal user.
+type UserReader interface {
+	GetOrCreateUserByClerkID(ctx context.Context, clerkUserID, username string) (*stillv1.User, error)
 }
 
 // NewService creates a new resonate service.
-func NewService(postRepo *repository.PostRepository, resonanceRepo *repository.ResonanceRepository) *Service {
+func NewService(postRepo *repository.PostRepository, resonanceRepo *repository.ResonanceRepository, userRepo UserReader) *Service {
 	return &Service{
 		postRepo:      postRepo,
 		resonanceRepo: resonanceRepo,
+		userRepo:      userRepo,
 	}
 }
 
@@ -31,7 +38,11 @@ func (s *Service) Resonate(ctx context.Context, req *connect.Request[stillv1.Res
 	if strings.TrimSpace(req.Msg.PostId) == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("post_id is required"))
 	}
-	_, hasResonated, err := s.resonanceRepo.ToggleResonance(ctx, req.Msg.PostId, db.DefaultUserID)
+	user, err := auth.CurrentUser(ctx, s.userRepo)
+	if err != nil {
+		return nil, err
+	}
+	_, hasResonated, err := s.resonanceRepo.ToggleResonance(ctx, req.Msg.PostId, user.Id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}

@@ -21,6 +21,8 @@ type Config struct {
 	S3SecretAccessKey string
 
 	CORSAllowedOrigins string
+
+	ClerkSecretKey string
 }
 
 // Load loads configuration from environment variables.
@@ -40,6 +42,8 @@ func Load() *Config {
 		S3SecretAccessKey: getEnv("S3_SECRET_ACCESS_KEY", ""),
 
 		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "*"),
+
+		ClerkSecretKey: getEnv("CLERK_SECRET_KEY", ""),
 	}
 }
 
@@ -53,6 +57,9 @@ func (c *Config) Validate() error {
 	}
 	if c.S3Region == "" {
 		return fmt.Errorf("S3_REGION is required")
+	}
+	if c.ClerkSecretKey == "" {
+		return fmt.Errorf("CLERK_SECRET_KEY is required")
 	}
 	if c.AppEnv == "prod" {
 		if c.S3AccessKeyID == "" || c.S3SecretAccessKey == "" {

@@ -4,6 +4,7 @@ export const colors = {
   secondary: '#666666',
   border: '#ECECEC',
   white: '#FFFFFF',
+  error: '#B00020',
 } as const;
 
 export type ColorName = keyof typeof colors;

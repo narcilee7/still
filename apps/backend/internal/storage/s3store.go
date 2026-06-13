@@ -147,4 +147,3 @@ func (s *S3Store) setPublicReadPolicy(ctx context.Context) error {
 	})
 	return err
 }
-

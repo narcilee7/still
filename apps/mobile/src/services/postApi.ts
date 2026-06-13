@@ -1,4 +1,4 @@
-import { createPromiseClient } from '@connectrpc/connect';
+import { Interceptor, createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
 import {
   AnalyzeService,
@@ -12,11 +12,21 @@ import {
   UserService,
 } from '@still/generated-sdk';
 import { Mood, Post, User } from '@still/shared-types';
+import { getToken } from './authToken';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
 
+const authInterceptor: Interceptor = (next) => async (req) => {
+  const token = await getToken();
+  if (token) {
+    req.header.set('Authorization', `Bearer ${token}`);
+  }
+  return next(req);
+};
+
 const transport = createConnectTransport({
   baseUrl: API_BASE_URL,
+  interceptors: [authInterceptor],
 });
 
 const feedClient = createPromiseClient(FeedService, transport);
@@ -99,6 +109,15 @@ export async function resonate(postId: string): Promise<ResonateResult> {
   return {
     post: mapProtoPost(res.post),
     hasResonated: res.hasResonated,
+  };
+}
+
+export async function getMe(): Promise<User> {
+  const res = await userClient.getMe({});
+  return {
+    id: res.user?.id || '',
+    username: res.user?.username || '',
+    avatarUrl: res.user?.avatarUrl || undefined,
   };
 }
 
