@@ -36,7 +36,7 @@ still/
 
 | Layer | Tech |
 |-------|------|
-| Mobile | Expo (React Native) + TypeScript + React Navigation + Zustand |
+| Mobile | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand |
 | Backend | Go + ConnectRPC + pgx/v5 + golang-migrate |
 | API | Protocol Buffers + buf |
 | Database | PostgreSQL |

@@ -4,11 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Post } from '@still/shared-types';
 import { PostCard, colors, spacing, typography } from '@still/design-system';
 import { getProfile, listFeed, resonate } from '../services/postApi';
+import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 
 export function ProfileScreen() {
   const user = useStore((state) => state.user);
-  const posts = useStore((state) => state.posts.filter((p) => p.userId === state.user.id));
+  const posts = useStore(
+    useShallow((state) => state.posts.filter((p) => p.userId === state.user.id))
+  );
   const setUser = useStore((state) => state.setUser);
   const setPosts = useStore((state) => state.setPosts);
   const resonatedIds = useStore((state) => state.resonatedPostIds);

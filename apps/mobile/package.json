@@ -21,18 +21,18 @@
     "@still/design-system": "0.1.0",
     "@still/generated-sdk": "0.1.0",
     "@still/shared-types": "0.1.0",
-    "expo": "~56.0.11",
-    "expo-image-picker": "~56.0.17",
-    "expo-status-bar": "~56.0.4",
-    "react": "19.2.3",
-    "react-native": "0.85.3",
-    "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2",
+    "expo": "~54.0.0",
+    "expo-image-picker": "~17.0.11",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
-    "@types/react": "~19.2.2",
+    "@types/react": "~19.1.10",
     "typescript": "^5.4.5"
   }
 }
