@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mood, MOODS } from '@still/shared-types';
@@ -24,7 +16,9 @@ export function CreateEditScreen({ route, navigation }: Props) {
   const { imageUri } = route.params;
   const addPost = useStore((state) => state.addPost);
 
-  const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing' | 'error'>('uploading');
+  const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing' | 'error'>(
+    'uploading'
+  );
   const [loadingText, setLoadingText] = useState(LOADING_TEXTS[0]);
   const [publicUrl, setPublicUrl] = useState('');
   const [mood, setMood] = useState<Mood>('still');
@@ -95,7 +89,11 @@ export function CreateEditScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.centered}>
         <Text style={styles.loadingText}>
-          {step === 'uploading' ? 'Uploading…' : step === 'publishing' ? 'Publishing…' : loadingText}
+          {step === 'uploading'
+            ? 'Uploading…'
+            : step === 'publishing'
+              ? 'Publishing…'
+              : loadingText}
         </Text>
       </SafeAreaView>
     );

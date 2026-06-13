@@ -48,16 +48,19 @@ export interface ProfileResult {
   resonancesCount: number;
 }
 
-function mapProtoPost(p: any): Post {
+function mapProtoPost(p: unknown): Post {
+  const proto = p as Record<string, unknown>;
   return {
-    id: p.id,
-    userId: p.userId,
-    imageUrl: p.imageUrl,
-    mood: p.mood as Mood,
-    title: p.title,
-    description: p.description,
-    createdAt: p.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
-    resonanceCount: p.resonanceCount ?? 0,
+    id: String(proto.id ?? ''),
+    userId: String(proto.userId ?? ''),
+    imageUrl: String(proto.imageUrl ?? ''),
+    mood: String(proto.mood ?? 'still') as Mood,
+    title: String(proto.title ?? ''),
+    description: String(proto.description ?? ''),
+    createdAt:
+      (proto.createdAt as { toDate?: () => Date } | undefined)?.toDate?.().toISOString() ??
+      new Date().toISOString(),
+    resonanceCount: Number(proto.resonanceCount ?? 0),
   };
 }
 

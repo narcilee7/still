@@ -34,15 +34,15 @@ still/
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| Mobile | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand |
-| Backend | Go + ConnectRPC + pgx/v5 + golang-migrate |
-| API | Protocol Buffers + buf |
-| Database | PostgreSQL |
-| Storage | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / Cloudflare R2) |
-| AI | OpenAI GPT-4o vision |
-| Auth | Clerk (recommended) — not yet implemented |
+| Layer    | Tech                                                                      |
+| -------- | ------------------------------------------------------------------------- |
+| Mobile   | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand |
+| Backend  | Go + ConnectRPC + pgx/v5 + golang-migrate                                 |
+| API      | Protocol Buffers + buf                                                    |
+| Database | PostgreSQL                                                                |
+| Storage  | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / Cloudflare R2)             |
+| AI       | OpenAI GPT-4o vision                                                      |
+| Auth     | Clerk (recommended) — not yet implemented                                 |
 
 ## Quick Start
 

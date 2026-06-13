@@ -28,16 +28,16 @@ still/
 
 ## Tech Stack
 
-| 层级 | 技术 |
-|------|------|
-| Mobile | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand + Clerk |
-| Backend | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai |
-| API | Protocol Buffers + buf |
-| Database | PostgreSQL |
-| Storage | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2) |
-| AI | OpenAI / Claude / Gemini（统一抽象） |
-| Auth | Clerk（JWT 验证，后端 `internal/auth`） |
-| Observability | zerolog + OpenTelemetry + Sentry |
+| 层级          | 技术                                                                              |
+| ------------- | --------------------------------------------------------------------------------- |
+| Mobile        | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand + Clerk |
+| Backend       | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai                        |
+| API           | Protocol Buffers + buf                                                            |
+| Database      | PostgreSQL                                                                        |
+| Storage       | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2)                                |
+| AI            | OpenAI / Claude / Gemini（统一抽象）                                              |
+| Auth          | Clerk（JWT 验证，后端 `internal/auth`）                                           |
+| Observability | zerolog + OpenTelemetry + Sentry                                                  |
 
 ## Key Principles
 

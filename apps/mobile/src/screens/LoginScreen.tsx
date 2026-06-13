@@ -33,11 +33,7 @@ export function LoginScreen() {
           <Text style={styles.subtitle}>A quiet place for your moments.</Text>
         </View>
         <View style={styles.actions}>
-          <QuietButton
-            title="Continue with Google"
-            onPress={handleSignIn}
-            disabled={loading}
-          />
+          <QuietButton title="Continue with Google" onPress={handleSignIn} disabled={loading} />
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </View>
       </View>

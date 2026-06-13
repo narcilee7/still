@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Post, User } from '@still/shared-types';
+import { Post } from '@still/shared-types';
 import { GUEST_USER, CurrentUser } from '../data/defaultUser';
 
 interface AppState {
@@ -11,7 +11,7 @@ interface AppState {
   appendPosts: (posts: Post[]) => void;
   addPost: (post: Post) => void;
   updatePost: (postId: string, patch: Partial<Post>) => void;
-  setUser: (user: CurrentUser) => void;
+  setUser: (user: CurrentUser | ((prev: CurrentUser) => CurrentUser)) => void;
   toggleResonate: (postId: string) => void;
   setResonated: (postId: string, resonated: boolean) => void;
 }
@@ -48,7 +48,10 @@ export const useStore = create<AppState>((set) => ({
       posts: state.posts.map((p) => (p.id === postId ? { ...p, ...patch } : p)),
     })),
 
-  setUser: (user) => set({ user }),
+  setUser: (user) =>
+    set((state) => ({
+      user: typeof user === 'function' ? user(state.user) : user,
+    })),
 
   toggleResonate: (postId) =>
     set((state) => {
@@ -92,10 +95,7 @@ export const useStore = create<AppState>((set) => ({
         if (post.id !== postId) return post;
         return {
           ...post,
-          resonanceCount: Math.max(
-            0,
-            post.resonanceCount + (resonated ? 1 : -1)
-          ),
+          resonanceCount: Math.max(0, post.resonanceCount + (resonated ? 1 : -1)),
         };
       });
 

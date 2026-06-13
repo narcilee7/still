@@ -1,9 +1,26 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, ListRenderItem, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  Image,
+  ListRenderItem,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useAuth } from '@clerk/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Post } from '@still/shared-types';
-import { EmptyState, ErrorState, LoadingSpinner, PostCard, QuietButton, colors, spacing, typography } from '@still/design-system';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingSpinner,
+  PostCard,
+  QuietButton,
+  colors,
+  spacing,
+  typography,
+} from '@still/design-system';
 import { getProfile, listFeed, resonate } from '../services/postApi';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
@@ -27,13 +44,13 @@ export function ProfileScreen() {
   const load = useCallback(async () => {
     try {
       const [profile, feed] = await Promise.all([getProfile(user.id), listFeed()]);
-      setUser({
-        ...user,
+      setUser((prev) => ({
+        ...prev,
         username: profile.user.username,
         avatarUrl: profile.user.avatarUrl,
         postsCount: profile.postsCount,
         resonancesCount: profile.resonancesCount,
-      });
+      }));
       setPosts(feed.posts);
       setLoadState('idle');
     } catch (err) {
@@ -147,12 +164,15 @@ export function ProfileScreen() {
         keyExtractor={keyExtractor}
         ListHeaderComponent={Header}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.secondary} />}
-        ListEmptyComponent={
-          <EmptyState
-            title="No moments yet"
-            subtitle="Your quiet moments will appear here."
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.secondary}
           />
+        }
+        ListEmptyComponent={
+          <EmptyState title="No moments yet" subtitle="Your quiet moments will appear here." />
         }
       />
     </SafeAreaView>
