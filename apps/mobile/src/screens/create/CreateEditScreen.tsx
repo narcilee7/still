@@ -11,7 +11,7 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mood, MOODS } from '@still/shared-types';
-import { colors, spacing, typography, QuietButton } from '@still/design-system';
+import { colors, spacing, typography, ErrorState, QuietButton } from '@still/design-system';
 import { CreateStackParamList } from '../../navigation/types';
 import { analyzeImage, createPost, getUploadURL, uploadImage } from '../../services/postApi';
 import { useStore } from '../../store/useStore';
@@ -24,17 +24,20 @@ export function CreateEditScreen({ route, navigation }: Props) {
   const { imageUri } = route.params;
   const addPost = useStore((state) => state.addPost);
 
-  const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing'>('uploading');
+  const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing' | 'error'>('uploading');
   const [loadingText, setLoadingText] = useState(LOADING_TEXTS[0]);
   const [publicUrl, setPublicUrl] = useState('');
   const [mood, setMood] = useState<Mood>('still');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [publishError, setPublishError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const prepare = useCallback(async () => {
     let textInterval: ReturnType<typeof setInterval> | null = null;
+    setStep('uploading');
+    setPublishError(null);
 
-    async function prepare() {
+    try {
       textInterval = setInterval(() => {
         setLoadingText((prev) => {
           const idx = LOADING_TEXTS.indexOf(prev);
@@ -42,46 +45,50 @@ export function CreateEditScreen({ route, navigation }: Props) {
         });
       }, 900);
 
-      try {
-        const blob = await fetch(imageUri).then((r) => r.blob());
-        const contentType = blob.type || 'image/jpeg';
-        const filename = imageUri.split('/').pop() || 'image.jpg';
+      const blob = await fetch(imageUri).then((r) => r.blob());
+      const contentType = blob.type || 'image/jpeg';
+      const filename = imageUri.split('/').pop() || 'image.jpg';
 
-        const { uploadUrl, publicUrl: pub } = await getUploadURL(filename, contentType);
-        await uploadImage(imageUri, uploadUrl, contentType);
-        setPublicUrl(pub);
+      const { uploadUrl, publicUrl: pub } = await getUploadURL(filename, contentType);
+      await uploadImage(imageUri, uploadUrl, contentType);
+      setPublicUrl(pub);
 
-        setStep('analyzing');
-        const result = await analyzeImage(pub);
-        setMood(result.mood);
-        setTitle(result.title);
-        setDescription(result.description);
-        setStep('editing');
-      } catch (err) {
-        console.error('prepare failed', err);
-      } finally {
-        if (textInterval) clearInterval(textInterval);
-      }
-    }
-
-    prepare();
-
-    return () => {
+      setStep('analyzing');
+      const result = await analyzeImage(pub);
+      setMood(result.mood);
+      setTitle(result.title);
+      setDescription(result.description);
+      setStep('editing');
+    } catch (err) {
+      console.error('prepare failed', err);
+      setStep('error');
+    } finally {
       if (textInterval) clearInterval(textInterval);
-    };
+    }
   }, [imageUri]);
+
+  useEffect(() => {
+    prepare();
+  }, [prepare]);
 
   const publish = useCallback(async () => {
     if (!publicUrl) return;
     setStep('publishing');
-    const post = await createPost({
-      imageUrl: publicUrl,
-      mood,
-      title: title.trim(),
-      description: description.trim(),
-    });
-    addPost(post);
-    navigation.replace('CreateSuccess', { postId: post.id });
+    setPublishError(null);
+    try {
+      const post = await createPost({
+        imageUrl: publicUrl,
+        mood,
+        title: title.trim(),
+        description: description.trim(),
+      });
+      addPost(post);
+      navigation.replace('CreateSuccess', { postId: post.id });
+    } catch (err) {
+      console.error('publish failed', err);
+      setPublishError('We could not publish your moment. Please try again.');
+      setStep('editing');
+    }
   }, [publicUrl, mood, title, description, addPost, navigation]);
 
   if (step === 'uploading' || step === 'analyzing' || step === 'publishing') {
@@ -90,6 +97,18 @@ export function CreateEditScreen({ route, navigation }: Props) {
         <Text style={styles.loadingText}>
           {step === 'uploading' ? 'Uploading…' : step === 'publishing' ? 'Publishing…' : loadingText}
         </Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (step === 'error') {
+    return (
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.centered}>
+        <ErrorState
+          title="Could not prepare your moment"
+          message="Something went wrong while uploading or analyzing your photo. Please try again."
+          onRetry={prepare}
+        />
       </SafeAreaView>
     );
   }
@@ -156,6 +175,7 @@ export function CreateEditScreen({ route, navigation }: Props) {
       </ScrollView>
 
       <View style={styles.footer}>
+        {publishError ? <Text style={styles.publishError}>{publishError}</Text> : null}
         <QuietButton title="Publish" onPress={publish} disabled={!canPublish} />
       </View>
     </SafeAreaView>
@@ -247,5 +267,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+  },
+  publishError: {
+    fontSize: typography.meta.fontSize,
+    lineHeight: typography.meta.lineHeight,
+    color: colors.primary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });

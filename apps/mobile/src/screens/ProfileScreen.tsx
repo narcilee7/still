@@ -1,11 +1,13 @@
-import React, { useCallback, useEffect } from 'react';
-import { FlatList, ListRenderItem, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, Image, ListRenderItem, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Post } from '@still/shared-types';
-import { PostCard, colors, spacing, typography } from '@still/design-system';
+import { EmptyState, ErrorState, LoadingSpinner, PostCard, colors, spacing, typography } from '@still/design-system';
 import { getProfile, listFeed, resonate } from '../services/postApi';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
+
+type LoadState = 'idle' | 'loading' | 'error';
 
 export function ProfileScreen() {
   const user = useStore((state) => state.user);
@@ -15,8 +17,10 @@ export function ProfileScreen() {
   const setUser = useStore((state) => state.setUser);
   const setPosts = useStore((state) => state.setPosts);
   const resonatedIds = useStore((state) => state.resonatedPostIds);
-  const storeToggleResonate = useStore((state) => state.toggleResonate);
+  const setResonated = useStore((state) => state.setResonated);
   const updatePost = useStore((state) => state.updatePost);
+  const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -28,9 +32,11 @@ export function ProfileScreen() {
         postsCount: profile.postsCount,
         resonancesCount: profile.resonancesCount,
       });
-      setPosts(feed);
+      setPosts(feed.posts);
+      setLoadState('idle');
     } catch (err) {
       console.error('profile load failed', err);
+      setLoadState('error');
     }
   }, [user.id, setUser, setPosts]);
 
@@ -38,17 +44,25 @@ export function ProfileScreen() {
     load();
   }, [load]);
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    load().finally(() => setRefreshing(false));
+  }, [load]);
+
   const handleResonate = useCallback(
     async (postId: string) => {
-      storeToggleResonate(postId);
+      const wasResonated = resonatedIds.has(postId);
+      setResonated(postId, !wasResonated);
       try {
-        const updated = await resonate(postId);
-        updatePost(postId, { resonanceCount: updated.resonanceCount });
+        const result = await resonate(postId);
+        updatePost(postId, { resonanceCount: result.post.resonanceCount });
+        setResonated(postId, result.hasResonated);
       } catch (err) {
         console.error('resonate failed', err);
+        setResonated(postId, wasResonated);
       }
     },
-    [storeToggleResonate, updatePost]
+    [resonatedIds, setResonated, updatePost]
   );
 
   const renderItem: ListRenderItem<Post> = useCallback(
@@ -68,7 +82,11 @@ export function ProfileScreen() {
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{user.username.charAt(0).toUpperCase()}</Text>
+        {user.avatarUrl ? (
+          <Image source={{ uri: user.avatarUrl }} style={styles.avatarImage} />
+        ) : (
+          <Text style={styles.avatarText}>{user.username.charAt(0).toUpperCase()}</Text>
+        )}
       </View>
       <Text style={styles.username}>@{user.username}</Text>
       <View style={styles.stats}>
@@ -84,6 +102,30 @@ export function ProfileScreen() {
     </View>
   );
 
+  if (loadState === 'loading' && posts.length === 0) {
+    return (
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
+        <View style={styles.centered}>
+          <LoadingSpinner size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (loadState === 'error' && posts.length === 0) {
+    return (
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
+        <View style={styles.centered}>
+          <ErrorState
+            title="Could not load profile"
+            message="Something went wrong while fetching your profile. Please try again."
+            onRetry={load}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <FlatList
@@ -92,6 +134,13 @@ export function ProfileScreen() {
         keyExtractor={keyExtractor}
         ListHeaderComponent={Header}
         contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.secondary} />}
+        ListEmptyComponent={
+          <EmptyState
+            title="No moments yet"
+            subtitle="Your quiet moments will appear here."
+          />
+        }
       />
     </SafeAreaView>
   );
@@ -104,6 +153,10 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 32,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
@@ -118,6 +171,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
   },
   avatarText: {
     fontSize: typography.title.fontSize,

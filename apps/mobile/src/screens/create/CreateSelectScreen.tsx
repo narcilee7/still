@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,11 +9,15 @@ import { CreateStackParamList } from '../../navigation/types';
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateSelect'>;
 
 export function CreateSelectScreen({ navigation }: Props) {
-  const [permissionStatus, setPermissionStatus] = useState<ImagePicker.PermissionStatus | null>(null);
+  const [mediaPermissionStatus, setMediaPermissionStatus] = useState<ImagePicker.PermissionStatus | null>(null);
+  const [cameraPermissionStatus, setCameraPermissionStatus] = useState<ImagePicker.PermissionStatus | null>(null);
 
   useEffect(() => {
     ImagePicker.requestMediaLibraryPermissionsAsync().then((result) => {
-      setPermissionStatus(result.status);
+      setMediaPermissionStatus(result.status);
+    });
+    ImagePicker.requestCameraPermissionsAsync().then((result) => {
+      setCameraPermissionStatus(result.status);
     });
   }, []);
 
@@ -30,6 +34,25 @@ export function CreateSelectScreen({ navigation }: Props) {
     }
   }, [navigation]);
 
+  const takePhoto = useCallback(async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.85,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      navigation.navigate('CreateEdit', { imageUri: result.assets[0].uri });
+    }
+  }, [navigation]);
+
+  const openSettings = useCallback(() => {
+    Linking.openSettings();
+  }, []);
+
+  const showMediaPermissionHint = mediaPermissionStatus === ImagePicker.PermissionStatus.DENIED;
+  const showCameraPermissionHint = cameraPermissionStatus === ImagePicker.PermissionStatus.DENIED;
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <View style={styles.header}>
@@ -41,16 +64,23 @@ export function CreateSelectScreen({ navigation }: Props) {
         <QuietButton title="Choose from library" onPress={openLibrary} variant="primary" />
         <QuietButton
           title="Take photo"
-          onPress={() => {}}
+          onPress={takePhoto}
           variant="secondary"
-          disabled
         />
       </View>
 
-      {permissionStatus === ImagePicker.PermissionStatus.DENIED && (
+      {showMediaPermissionHint && (
         <Text style={styles.permissionHint}>
           Gallery access is needed to choose a photo.
         </Text>
+      )}
+      {showCameraPermissionHint && (
+        <View style={styles.permissionRow}>
+          <Text style={styles.permissionHint}>
+            Camera access is needed to take a photo.
+          </Text>
+          <QuietButton title="Open Settings" onPress={openSettings} variant="secondary" />
+        </View>
       )}
     </SafeAreaView>
   );
@@ -89,5 +119,10 @@ const styles = StyleSheet.create({
     lineHeight: typography.meta.lineHeight,
     color: colors.secondary,
     textAlign: 'center',
+  },
+  permissionRow: {
+    marginTop: spacing.lg,
+    alignItems: 'center',
+    gap: spacing.sm,
   },
 });

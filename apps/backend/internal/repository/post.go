@@ -85,10 +85,17 @@ func (r *PostRepository) ListPosts(ctx context.Context, pageSize int32, pageToke
 		args = append(args, t)
 	}
 
+	statusWhere := "status = 'APPROVED'"
+	if where != "" {
+		statusWhere = where + " AND " + statusWhere
+	} else {
+		statusWhere = "WHERE " + statusWhere
+	}
+
 	rows, err := r.pool.Query(ctx, `
 		SELECT id, user_id, image_url, mood, title, description, status, created_at, resonance_count
 		FROM posts
-		`+where+`
+		`+statusWhere+`
 		ORDER BY created_at DESC
 		LIMIT $1
 	`, args...)
@@ -165,4 +172,3 @@ func StatusToString(s stillv1.PostStatus) string {
 		return "PENDING"
 	}
 }
-

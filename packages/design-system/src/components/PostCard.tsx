@@ -33,16 +33,25 @@ export function PostCard({
   style,
 }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   if (variant === "compact") {
     return (
       <View style={[compactStyles.root, style]}>
-        <Image
-          source={{ uri: post.imageUrl }}
-          style={compactStyles.image}
-          resizeMode="cover"
-          onLoad={() => setImageLoaded(true)}
-        />
+        <View style={compactStyles.imageContainer}>
+          <Image
+            source={{ uri: post.imageUrl }}
+            style={[compactStyles.image, imageLoaded && compactStyles.imageVisible]}
+            resizeMode="cover"
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+          {(!imageLoaded || imageError) && (
+            <View style={compactStyles.imagePlaceholder}>
+              {imageError && <Text style={compactStyles.imagePlaceholderText}>?</Text>}
+            </View>
+          )}
+        </View>
         <View style={compactStyles.body}>
           <MoodTag mood={post.mood} variant="small" />
           <Text style={compactStyles.title} numberOfLines={1}>
@@ -71,8 +80,13 @@ export function PostCard({
           style={[fullStyles.image, imageLoaded && fullStyles.imageVisible]}
           resizeMode="cover"
           onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
         />
-        {!imageLoaded && <View style={fullStyles.imagePlaceholder} />}
+        {(!imageLoaded || imageError) && (
+          <View style={fullStyles.imagePlaceholder}>
+            {imageError && <Text style={fullStyles.imagePlaceholderText}>?</Text>}
+          </View>
+        )}
       </View>
 
       <View style={fullStyles.textArea}>
@@ -120,6 +134,13 @@ const fullStyles = StyleSheet.create({
   imagePlaceholder: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imagePlaceholderText: {
+    fontSize: typography.title.fontSize,
+    lineHeight: typography.title.lineHeight,
+    color: colors.secondary,
   },
   textArea: {
     paddingHorizontal: spacing.lg,
@@ -165,11 +186,32 @@ const compactStyles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.md,
   },
-  image: {
+  imageContainer: {
     width: 88,
     height: 110,
     borderRadius: 8,
     backgroundColor: colors.border,
+    overflow: "hidden",
+  },
+  image: {
+    width: 88,
+    height: 110,
+    opacity: 0,
+    backgroundColor: colors.border,
+  },
+  imageVisible: {
+    opacity: 1,
+  },
+  imagePlaceholder: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imagePlaceholderText: {
+    fontSize: typography.title.fontSize,
+    lineHeight: typography.title.lineHeight,
+    color: colors.secondary,
   },
   body: {
     flex: 1,

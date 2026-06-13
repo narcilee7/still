@@ -16,4 +16,5 @@ message ResonateRequest {
 
 message ResonateResponse {
   Post post = 1;
+  bool has_resonated = 2;
 }

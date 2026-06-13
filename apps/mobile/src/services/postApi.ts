@@ -1,4 +1,4 @@
-import { createPromiseClient, Interceptor } from '@connectrpc/connect';
+import { createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
 import {
   AnalyzeService,
@@ -13,24 +13,10 @@ import {
 } from '@still/generated-sdk';
 import { Mood, Post, User } from '@still/shared-types';
 
-const debugInterceptor: Interceptor = (next) => async (req) => {
-  const methodName = `${req.service.typeName}/${req.method.name}`;
-  console.log('[connect] req:', methodName, req.url);
-  try {
-    const res = await next(req);
-    console.log('[connect] res:', methodName, 'ct=', res.header.get('content-type'));
-    return res;
-  } catch (err) {
-    console.error('[connect] err:', methodName, err);
-    throw err;
-  }
-};
-
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
 
 const transport = createConnectTransport({
   baseUrl: API_BASE_URL,
-  interceptors: [debugInterceptor],
 });
 
 const feedClient = createPromiseClient(FeedService, transport);
@@ -65,9 +51,17 @@ function mapProtoPost(p: any): Post {
   };
 }
 
-export async function listFeed(): Promise<Post[]> {
-  const res = await feedClient.listFeed({ pageSize: 50, pageToken: '' });
-  return (res.posts ?? []).map(mapProtoPost);
+export interface FeedPage {
+  posts: Post[];
+  nextPageToken: string;
+}
+
+export async function listFeed(pageToken = ''): Promise<FeedPage> {
+  const res = await feedClient.listFeed({ pageSize: 20, pageToken });
+  return {
+    posts: (res.posts ?? []).map(mapProtoPost),
+    nextPageToken: res.nextPageToken ?? '',
+  };
 }
 
 export async function analyzeImage(imageUrl: string): Promise<AnalysisResult> {
@@ -95,9 +89,17 @@ export async function createPost(payload: {
   return mapProtoPost(res.post);
 }
 
-export async function resonate(postId: string): Promise<Post> {
+export interface ResonateResult {
+  post: Post;
+  hasResonated: boolean;
+}
+
+export async function resonate(postId: string): Promise<ResonateResult> {
   const res = await resonateClient.resonate({ postId });
-  return mapProtoPost(res.post);
+  return {
+    post: mapProtoPost(res.post),
+    hasResonated: res.hasResonated,
+  };
 }
 
 export async function getProfile(userId: string): Promise<ProfileResult> {

@@ -8,10 +8,12 @@ interface AppState {
   resonatedPostIds: Set<string>;
 
   setPosts: (posts: Post[]) => void;
+  appendPosts: (posts: Post[]) => void;
   addPost: (post: Post) => void;
   updatePost: (postId: string, patch: Partial<Post>) => void;
   setUser: (user: CurrentUser) => void;
   toggleResonate: (postId: string) => void;
+  setResonated: (postId: string, resonated: boolean) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -20,6 +22,13 @@ export const useStore = create<AppState>((set) => ({
   resonatedPostIds: new Set(),
 
   setPosts: (posts) => set({ posts }),
+
+  appendPosts: (posts) =>
+    set((state) => {
+      const existingIds = new Set(state.posts.map((p) => p.id));
+      const newPosts = posts.filter((p) => !existingIds.has(p.id));
+      return { posts: [...state.posts, ...newPosts] };
+    }),
 
   addPost: (post) =>
     set((state) => {
@@ -63,6 +72,40 @@ export const useStore = create<AppState>((set) => ({
       }
 
       const delta = isResonating ? 1 : -1;
+      return {
+        posts: nextPosts,
+        resonatedPostIds: nextResonated,
+        user: {
+          ...state.user,
+          resonancesCount: Math.max(0, state.user.resonancesCount + delta),
+        },
+      };
+    }),
+
+  setResonated: (postId, resonated) =>
+    set((state) => {
+      const nextResonated = new Set(state.resonatedPostIds);
+      const wasResonated = nextResonated.has(postId);
+      if (resonated === wasResonated) return state;
+
+      const nextPosts = state.posts.map((post) => {
+        if (post.id !== postId) return post;
+        return {
+          ...post,
+          resonanceCount: Math.max(
+            0,
+            post.resonanceCount + (resonated ? 1 : -1)
+          ),
+        };
+      });
+
+      if (resonated) {
+        nextResonated.add(postId);
+      } else {
+        nextResonated.delete(postId);
+      }
+
+      const delta = resonated ? 1 : -1;
       return {
         posts: nextPosts,
         resonatedPostIds: nextResonated,

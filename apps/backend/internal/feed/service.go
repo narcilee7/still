@@ -2,6 +2,7 @@ package feed
 
 import (
 	"context"
+	"strings"
 
 	"connectrpc.com/connect"
 
@@ -23,7 +24,11 @@ func NewService(postRepo *repository.PostRepository) *Service {
 func (s *Service) ListFeed(ctx context.Context, req *connect.Request[stillv1.ListFeedRequest]) (*connect.Response[stillv1.ListFeedResponse], error) {
 	posts, nextPageToken, err := s.postRepo.ListPosts(ctx, req.Msg.PageSize, req.Msg.PageToken)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		code := connect.CodeInternal
+		if strings.Contains(err.Error(), "invalid page_token") {
+			code = connect.CodeInvalidArgument
+		}
+		return nil, connect.NewError(code, err)
 	}
 	return connect.NewResponse(&stillv1.ListFeedResponse{
 		Posts:         posts,

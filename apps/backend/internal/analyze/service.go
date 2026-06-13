@@ -2,6 +2,8 @@ package analyze
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"connectrpc.com/connect"
 
@@ -21,6 +23,9 @@ func NewService(analyzer ai.Analyzer) *Service {
 
 // AnalyzeImage analyzes an image and returns mood/title/description.
 func (s *Service) AnalyzeImage(ctx context.Context, req *connect.Request[stillv1.AnalyzeImageRequest]) (*connect.Response[stillv1.AnalyzeImageResponse], error) {
+	if strings.TrimSpace(req.Msg.ImageUrl) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("image_url is required"))
+	}
 	result, err := s.analyzer.Analyze(ctx, req.Msg.ImageUrl)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)

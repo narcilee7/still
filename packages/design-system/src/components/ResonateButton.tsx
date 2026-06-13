@@ -16,9 +16,7 @@ export function ResonateButton({ count, resonated, onPress }: ResonateButtonProp
       accessibilityRole="button"
       accessibilityLabel={resonated ? 'You feel this' : 'I feel this'}
     >
-      <Text style={[styles.label, resonated && styles.activeLabel]}>
-        {resonated ? 'I feel this' : 'I feel this'}
-      </Text>
+      <Text style={[styles.label, resonated && styles.activeLabel]}>I feel this</Text>
       <Text style={[styles.count, resonated && styles.activeLabel]}>{count}</Text>
     </Pressable>
   );
