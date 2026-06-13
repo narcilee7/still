@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package still.v1;
+
+option go_package = "github.com/still-mvp/still/apps/backend/gen/still/v1;stillv1";
+
+import "still/v1/common.proto";
+
+service UserService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfileResponse {
+  User user = 1;
+  int32 posts_count = 2;
+  int32 resonances_count = 3;
+}

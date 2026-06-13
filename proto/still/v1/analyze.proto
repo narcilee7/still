@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package still.v1;
+
+option go_package = "github.com/still-mvp/still/apps/backend/gen/still/v1;stillv1";
+
+service AnalyzeService {
+  rpc AnalyzeImage(AnalyzeImageRequest) returns (AnalyzeImageResponse);
+}
+
+message AnalyzeImageRequest {
+  string image_url = 1;
+}
+
+message AnalyzeImageResponse {
+  string mood = 1;
+  string title = 2;
+  string description = 3;
+}

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package still.v1;
+
+option go_package = "github.com/still-mvp/still/apps/backend/gen/still/v1;stillv1";
+
+import "still/v1/common.proto";
+
+service FeedService {
+  rpc ListFeed(ListFeedRequest) returns (ListFeedResponse);
+}
+
+message ListFeedRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListFeedResponse {
+  repeated Post posts = 1;
+  string next_page_token = 2;
+}
