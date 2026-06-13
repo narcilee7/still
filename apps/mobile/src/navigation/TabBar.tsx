@@ -1,21 +1,31 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography } from '@still/design-system';
 
-const LABELS: Record<string, string> = {
-  Feed: 'Feed',
-  Create: 'Add',
-  Profile: 'Profile',
-};
-
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { t } = useTranslation();
+
+  const labelFor = (name: string) => {
+    switch (name) {
+      case 'Feed':
+        return t('tabBar.feed');
+      case 'Create':
+        return t('tabBar.create');
+      case 'Profile':
+        return t('tabBar.profile');
+      default:
+        return name;
+    }
+  };
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
       <View style={styles.bar}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
-          const rawLabel = options.tabBarLabel ?? options.title ?? LABELS[route.name] ?? route.name;
+          const rawLabel =
+            options.tabBarLabel ?? options.title ?? labelFor(route.name) ?? route.name;
           const label = typeof rawLabel === 'string' ? rawLabel : route.name;
           const isFocused = state.index === index;
 

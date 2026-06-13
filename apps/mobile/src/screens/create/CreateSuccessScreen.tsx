@@ -2,12 +2,14 @@ import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography, QuietButton } from '@still/design-system';
 import { CreateStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateSuccess'>;
 
 export function CreateSuccessScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const addAnother = useCallback(() => {
     navigation.popToTop();
   }, [navigation]);
@@ -15,11 +17,11 @@ export function CreateSuccessScreen({ navigation }: Props) {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Your moment lingers.</Text>
-        <Text style={styles.subtitle}>It is now part of the quiet stream.</Text>
+        <Text style={styles.title}>{t('create.success.title')}</Text>
+        <Text style={styles.subtitle}>{t('create.success.subtitle')}</Text>
       </View>
       <View style={styles.footer}>
-        <QuietButton title="Add another" onPress={addAnother} />
+        <QuietButton title={t('create.success.addAnother')} onPress={addAnother} />
       </View>
     </SafeAreaView>
   );

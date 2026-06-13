@@ -1,0 +1,82 @@
+{
+  "auth": {
+    "title": "Still",
+    "subtitle": "一个安放此刻的安静角落。",
+    "continueWithGoogle": "使用 Google 继续",
+    "signInError": "登录失败，请重试。"
+  },
+  "tabBar": {
+    "feed": "流",
+    "create": "添加",
+    "profile": "我的"
+  },
+  "feed": {
+    "errorTitle": "无法加载信息流",
+    "errorMessage": "获取瞬间时出了点问题，请重试。",
+    "emptyTitle": "还没有瞬间",
+    "emptySubtitle": "成为第一个分享安静瞬间的人。"
+  },
+  "profile": {
+    "moments": "瞬间",
+    "resonances": "共鸣",
+    "signOut": "退出登录",
+    "switchLanguage": "English",
+    "errorTitle": "无法加载个人主页",
+    "errorMessage": "获取个人资料时出了点问题，请重试。",
+    "emptyTitle": "还没有瞬间",
+    "emptySubtitle": "你分享的安静瞬间会出现在这里。"
+  },
+  "create": {
+    "select": {
+      "title": "添加瞬间",
+      "subtitle": "一张照片，一种情绪，几句安静的话。",
+      "chooseFromLibrary": "从相册选择",
+      "takePhoto": "拍照",
+      "galleryPermission": "需要访问相册以选择照片。",
+      "cameraPermission": "需要访问相机以拍摄照片。",
+      "openSettings": "打开设置"
+    },
+    "edit": {
+      "uploading": "上传中…",
+      "analyzing": "分析中…",
+      "publishing": "发布中…",
+      "loadingText": "寻找文字中…",
+      "mood": "情绪",
+      "title": "标题",
+      "description": "描述",
+      "titlePlaceholder": "几句话",
+      "descriptionPlaceholder": "什么在萦绕？",
+      "publish": "发布",
+      "prepareErrorTitle": "无法准备你的瞬间",
+      "prepareErrorMessage": "上传或分析照片时出了点问题，请重试。",
+      "publishError": "发布失败，请重试。"
+    },
+    "success": {
+      "title": "你的瞬间已留存。",
+      "subtitle": "它现在成为安静流的一部分。",
+      "addAnother": "再添加一个"
+    }
+  },
+  "postDetail": {
+    "close": "关闭",
+    "notFound": "找不到该瞬间",
+    "goBack": "返回",
+    "share": "分享",
+    "edit": "编辑",
+    "delete": "删除",
+    "deleteTitle": "删除瞬间？",
+    "deleteMessage": "此操作无法撤销。",
+    "cancel": "取消",
+    "resonanceCount": "{{count}} 次共鸣"
+  },
+  "editPost": {
+    "title": "标题",
+    "description": "描述",
+    "save": "保存",
+    "notFound": "找不到该瞬间",
+    "goBack": "返回"
+  },
+  "common": {
+    "retry": "重试"
+  }
+}

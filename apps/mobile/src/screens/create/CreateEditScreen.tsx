@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,20 +7,21 @@ import { colors, spacing, typography, ErrorState, QuietButton } from '@still/des
 import { CreateStackParamList } from '../../navigation/types';
 import { analyzeImage, createPost, getUploadURL, uploadImage } from '../../services/postApi';
 import { clearDraft, loadDraft, saveDraft } from '../../services/draftStorage';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store/useStore';
 
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateEdit'>;
 
-const LOADING_TEXTS = ['Finding words…', 'Looking closer…', 'Finding words…'];
-
 export function CreateEditScreen({ route, navigation }: Props) {
+  const { t } = useTranslation();
   const { imageUri } = route.params;
   const addPost = useStore((state) => state.addPost);
 
   const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing' | 'error'>(
     'uploading'
   );
-  const [loadingText, setLoadingText] = useState(LOADING_TEXTS[0]);
+  const [loadingText, setLoadingText] = useState(t('create.edit.loadingText'));
+  const loadingTexts = useMemo(() => [t('create.edit.loadingText')], [t]);
   const [publicUrl, setPublicUrl] = useState('');
   const [mood, setMood] = useState<Mood>('still');
   const [title, setTitle] = useState('');
@@ -35,8 +36,8 @@ export function CreateEditScreen({ route, navigation }: Props) {
     try {
       textInterval = setInterval(() => {
         setLoadingText((prev) => {
-          const idx = LOADING_TEXTS.indexOf(prev);
-          return LOADING_TEXTS[(idx + 1) % LOADING_TEXTS.length];
+          const idx = loadingTexts.indexOf(prev);
+          return loadingTexts[(idx + 1) % loadingTexts.length];
         });
       }, 900);
 
@@ -71,7 +72,7 @@ export function CreateEditScreen({ route, navigation }: Props) {
     } finally {
       if (textInterval) clearInterval(textInterval);
     }
-  }, [imageUri]);
+  }, [imageUri, loadingTexts]);
 
   useEffect(() => {
     prepare();
@@ -105,19 +106,19 @@ export function CreateEditScreen({ route, navigation }: Props) {
       navigation.replace('CreateSuccess', { postId: post.id });
     } catch (err) {
       console.error('publish failed', err);
-      setPublishError('We could not publish your moment. Please try again.');
+      setPublishError(t('create.edit.publishError'));
       setStep('editing');
     }
-  }, [publicUrl, mood, title, description, addPost, navigation]);
+  }, [publicUrl, mood, title, description, addPost, navigation, t]);
 
   if (step === 'uploading' || step === 'analyzing' || step === 'publishing') {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.centered}>
         <Text style={styles.loadingText}>
           {step === 'uploading'
-            ? 'Uploading…'
+            ? t('create.edit.uploading')
             : step === 'publishing'
-              ? 'Publishing…'
+              ? t('create.edit.publishing')
               : loadingText}
         </Text>
       </SafeAreaView>
@@ -128,8 +129,8 @@ export function CreateEditScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.centered}>
         <ErrorState
-          title="Could not prepare your moment"
-          message="Something went wrong while uploading or analyzing your photo. Please try again."
+          title={t('create.edit.prepareErrorTitle')}
+          message={t('create.edit.prepareErrorMessage')}
           onRetry={prepare}
         />
       </SafeAreaView>
@@ -151,7 +152,7 @@ export function CreateEditScreen({ route, navigation }: Props) {
           <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="cover" />
         )}
 
-        <Text style={styles.sectionLabel}>Mood</Text>
+        <Text style={styles.sectionLabel}>{t('create.edit.mood')}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -175,22 +176,22 @@ export function CreateEditScreen({ route, navigation }: Props) {
           })}
         </ScrollView>
 
-        <Text style={styles.sectionLabel}>Title</Text>
+        <Text style={styles.sectionLabel}>{t('create.edit.title')}</Text>
         <TextInput
           value={title}
           onChangeText={setTitle}
           style={styles.input}
-          placeholder="A few words"
+          placeholder={t('create.edit.titlePlaceholder')}
           placeholderTextColor={colors.secondary}
           maxLength={80}
         />
 
-        <Text style={styles.sectionLabel}>Description</Text>
+        <Text style={styles.sectionLabel}>{t('create.edit.description')}</Text>
         <TextInput
           value={description}
           onChangeText={setDescription}
           style={[styles.input, styles.inputMultiline]}
-          placeholder="What lingers?"
+          placeholder={t('create.edit.descriptionPlaceholder')}
           placeholderTextColor={colors.secondary}
           multiline
           maxLength={240}
@@ -199,7 +200,7 @@ export function CreateEditScreen({ route, navigation }: Props) {
 
       <View style={styles.footer}>
         {publishError ? <Text style={styles.publishError}>{publishError}</Text> : null}
-        <QuietButton title="Publish" onPress={publish} disabled={!canPublish} />
+        <QuietButton title={t('create.edit.publish')} onPress={publish} disabled={!canPublish} />
       </View>
     </SafeAreaView>
   );

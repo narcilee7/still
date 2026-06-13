@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useOAuth } from '@clerk/expo';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { QuietButton, colors, spacing, typography } from '@still/design-system';
 
 export function LoginScreen() {
+  const { t } = useTranslation();
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +21,7 @@ export function LoginScreen() {
       }
     } catch (err) {
       console.error('OAuth sign in failed', err);
-      setError('Could not sign in. Please try again.');
+      setError(t('auth.signInError'));
     } finally {
       setLoading(false);
     }
@@ -29,11 +31,15 @@ export function LoginScreen() {
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <View style={styles.content}>
         <View style={styles.brand}>
-          <Text style={styles.title}>Still</Text>
-          <Text style={styles.subtitle}>A quiet place for your moments.</Text>
+          <Text style={styles.title}>{t('auth.title')}</Text>
+          <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
         </View>
         <View style={styles.actions}>
-          <QuietButton title="Continue with Google" onPress={handleSignIn} disabled={loading} />
+          <QuietButton
+            title={t('auth.continueWithGoogle')}
+            onPress={handleSignIn}
+            disabled={loading}
+          />
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </View>
       </View>

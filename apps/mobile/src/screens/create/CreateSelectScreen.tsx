@@ -4,11 +4,13 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, typography, QuietButton } from '@still/design-system';
+import { useTranslation } from 'react-i18next';
 import { CreateStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateSelect'>;
 
 export function CreateSelectScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const [mediaPermissionStatus, setMediaPermissionStatus] =
     useState<ImagePicker.PermissionStatus | null>(null);
   const [cameraPermissionStatus, setCameraPermissionStatus] =
@@ -58,22 +60,30 @@ export function CreateSelectScreen({ navigation }: Props) {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Add a moment</Text>
-        <Text style={styles.subtitle}>A photo, a feeling, a few quiet words.</Text>
+        <Text style={styles.title}>{t('create.select.title')}</Text>
+        <Text style={styles.subtitle}>{t('create.select.subtitle')}</Text>
       </View>
 
       <View style={styles.actions}>
-        <QuietButton title="Choose from library" onPress={openLibrary} variant="primary" />
-        <QuietButton title="Take photo" onPress={takePhoto} variant="secondary" />
+        <QuietButton
+          title={t('create.select.chooseFromLibrary')}
+          onPress={openLibrary}
+          variant="primary"
+        />
+        <QuietButton title={t('create.select.takePhoto')} onPress={takePhoto} variant="secondary" />
       </View>
 
       {showMediaPermissionHint && (
-        <Text style={styles.permissionHint}>Gallery access is needed to choose a photo.</Text>
+        <Text style={styles.permissionHint}>{t('create.select.galleryPermission')}</Text>
       )}
       {showCameraPermissionHint && (
         <View style={styles.permissionRow}>
-          <Text style={styles.permissionHint}>Camera access is needed to take a photo.</Text>
-          <QuietButton title="Open Settings" onPress={openSettings} variant="secondary" />
+          <Text style={styles.permissionHint}>{t('create.select.cameraPermission')}</Text>
+          <QuietButton
+            title={t('create.select.openSettings')}
+            onPress={openSettings}
+            variant="secondary"
+          />
         </View>
       )}
     </SafeAreaView>

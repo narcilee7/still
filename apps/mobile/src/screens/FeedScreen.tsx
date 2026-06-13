@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Post } from '@still/shared-types';
 import { EmptyState, ErrorState, LoadingSpinner, PostCard, colors } from '@still/design-system';
+import { useTranslation } from 'react-i18next';
 import { listFeed, resonate } from '../services/postApi';
 import { RootStackParamList } from '../navigation/types';
 import { useStore } from '../store/useStore';
@@ -22,6 +23,7 @@ const { height: WINDOW_HEIGHT } = Dimensions.get('window');
 type LoadState = 'idle' | 'loading' | 'error';
 
 export function FeedScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const posts = useStore((state) => state.posts);
   const setPosts = useStore((state) => state.setPosts);
@@ -151,8 +153,8 @@ export function FeedScreen() {
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
         <View style={styles.centered}>
           <ErrorState
-            title="Could not load feed"
-            message="Something went wrong while fetching moments. Please try again."
+            title={t('feed.errorTitle')}
+            message={t('feed.errorMessage')}
             onRetry={() => load('refresh')}
           />
         </View>
@@ -175,7 +177,7 @@ export function FeedScreen() {
           onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
           ListEmptyComponent={
-            <EmptyState title="No moments yet" subtitle="Be the first to share a quiet moment." />
+            <EmptyState title={t('feed.emptyTitle')} subtitle={t('feed.emptySubtitle')} />
           }
           refreshControl={
             <RefreshControl
