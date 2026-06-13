@@ -118,7 +118,7 @@ const fullStyles = StyleSheet.create({
     opacity: 1,
   },
   imagePlaceholder: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.border,
   },
   textArea: {
