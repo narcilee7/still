@@ -1,4 +1,4 @@
-import { createPromiseClient } from '@connectrpc/connect';
+import { createPromiseClient, Interceptor } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-web';
 import {
   AnalyzeService,
@@ -13,10 +13,24 @@ import {
 } from '@still/generated-sdk';
 import { Mood, Post, User } from '@still/shared-types';
 
+const debugInterceptor: Interceptor = (next) => async (req) => {
+  const methodName = `${req.service.typeName}/${req.method.name}`;
+  console.log('[connect] req:', methodName, req.url);
+  try {
+    const res = await next(req);
+    console.log('[connect] res:', methodName, 'ct=', res.header.get('content-type'));
+    return res;
+  } catch (err) {
+    console.error('[connect] err:', methodName, err);
+    throw err;
+  }
+};
+
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8080';
 
 const transport = createConnectTransport({
   baseUrl: API_BASE_URL,
+  interceptors: [debugInterceptor],
 });
 
 const feedClient = createPromiseClient(FeedService, transport);

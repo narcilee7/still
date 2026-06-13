@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -49,7 +50,7 @@ func New(addr string, pool *pgxpool.Pool, analyzer ai.Analyzer, store storage.St
 	return &Server{
 		http: &http.Server{
 			Addr:    addr,
-			Handler: withCORS(mux, cfg),
+			Handler: withLogging(withCORS(mux, cfg)),
 		},
 	}
 }
@@ -97,4 +98,70 @@ func contains(list []string, item string) bool {
 		}
 	}
 	return false
+}
+
+// responseRecorder wraps http.ResponseWriter to capture status code and
+// response content-type for request logging.
+type responseRecorder struct {
+	http.ResponseWriter
+	statusCode  int
+	responseCT  string
+	wroteHeader bool
+}
+
+func newResponseRecorder(w http.ResponseWriter) *responseRecorder {
+	return &responseRecorder{
+		ResponseWriter: w,
+		statusCode:     http.StatusOK,
+	}
+}
+
+func (rr *responseRecorder) WriteHeader(code int) {
+	if rr.wroteHeader {
+		return
+	}
+	rr.wroteHeader = true
+	rr.statusCode = code
+	rr.responseCT = rr.Header().Get("Content-Type")
+	rr.ResponseWriter.WriteHeader(code)
+}
+
+func (rr *responseRecorder) Write(p []byte) (int, error) {
+	if !rr.wroteHeader {
+		rr.WriteHeader(http.StatusOK)
+	}
+	return rr.ResponseWriter.Write(p)
+}
+
+func withLogging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rr := newResponseRecorder(w)
+
+		log.Debug().
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Str("query", r.URL.RawQuery).
+			Str("origin", r.Header.Get("Origin")).
+			Str("content_type", r.Header.Get("Content-Type")).
+			Str("user_agent", r.Header.Get("User-Agent")).
+			Msg("request started")
+
+		next.ServeHTTP(rr, r)
+
+		level := log.Info()
+		if rr.statusCode >= 500 {
+			level = log.Error()
+		} else if rr.statusCode >= 400 {
+			level = log.Warn()
+		}
+
+		level.
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Int("status", rr.statusCode).
+			Str("response_content_type", rr.responseCT).
+			Dur("duration", time.Since(start)).
+			Msg("request completed")
+	})
 }
