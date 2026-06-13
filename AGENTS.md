@@ -15,7 +15,7 @@ Monorepo，使用 Yarn workspaces。
 still/
 ├── apps/
 │   ├── mobile/          # Expo React Native (TypeScript): navigation / screens / store / services / data
-│   └── backend/         # Go + ConnectRPC 单体服务
+│   └── backend/         # Go + ConnectRPC 单体服务：internal/{db,repository,service} / cmd/server
 ├── proto/
 │   └── still/v1/        # API 协议定义（Proto First）
 ├── packages/
@@ -31,7 +31,7 @@ still/
 | 层级 | 技术 |
 |------|------|
 | Mobile | Expo (React Native) + TypeScript + React Navigation + Zustand |
-| Backend | Go 1.26 + ConnectRPC |
+| Backend | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai |
 | API | Protocol Buffers + buf |
 | Database | PostgreSQL |
 | Storage | Cloudflare R2 |

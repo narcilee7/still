@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { Post, User } from '@still/shared-types';
-import { MOCK_POSTS } from '../data/mockPosts';
 import { MOCK_USER, CurrentUser } from '../data/mockUser';
 
 interface AppState {
@@ -10,12 +9,13 @@ interface AppState {
 
   setPosts: (posts: Post[]) => void;
   addPost: (post: Post) => void;
+  updatePost: (postId: string, patch: Partial<Post>) => void;
+  setUser: (user: CurrentUser) => void;
   toggleResonate: (postId: string) => void;
-  updateUser: (patch: Partial<CurrentUser>) => void;
 }
 
 export const useStore = create<AppState>((set) => ({
-  posts: MOCK_POSTS,
+  posts: [],
   user: MOCK_USER,
   resonatedPostIds: new Set(),
 
@@ -33,6 +33,13 @@ export const useStore = create<AppState>((set) => ({
         },
       };
     }),
+
+  updatePost: (postId, patch) =>
+    set((state) => ({
+      posts: state.posts.map((p) => (p.id === postId ? { ...p, ...patch } : p)),
+    })),
+
+  setUser: (user) => set({ user }),
 
   toggleResonate: (postId) =>
     set((state) => {
@@ -65,6 +72,4 @@ export const useStore = create<AppState>((set) => ({
         },
       };
     }),
-
-  updateUser: (patch) => set((state) => ({ user: { ...state.user, ...patch } })),
 }));

@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mood, MOODS } from '@still/shared-types';
 import { colors, spacing, typography, QuietButton } from '@still/design-system';
 import { CreateStackParamList } from '../../navigation/types';
-import { analyzeImage, createPost } from '../../services/postApi';
+import { analyzeImage, createPost, getUploadURL, uploadImage } from '../../services/postApi';
 import { useStore } from '../../store/useStore';
 
 type Props = NativeStackScreenProps<CreateStackParamList, 'CreateEdit'>;
@@ -24,54 +24,72 @@ export function CreateEditScreen({ route, navigation }: Props) {
   const { imageUri } = route.params;
   const addPost = useStore((state) => state.addPost);
 
-  const [step, setStep] = useState<'analyzing' | 'editing' | 'publishing'>('analyzing');
+  const [step, setStep] = useState<'uploading' | 'analyzing' | 'editing' | 'publishing'>('uploading');
   const [loadingText, setLoadingText] = useState(LOADING_TEXTS[0]);
+  const [publicUrl, setPublicUrl] = useState('');
   const [mood, setMood] = useState<Mood>('still');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    let index = 0;
-    const textInterval = setInterval(() => {
-      index = (index + 1) % LOADING_TEXTS.length;
-      setLoadingText(LOADING_TEXTS[index]);
-    }, 900);
+    let textInterval: ReturnType<typeof setInterval> | null = null;
 
-    analyzeImage().then((result) => {
-      clearInterval(textInterval);
-      setMood(result.mood);
-      setTitle(result.title);
-      setDescription(result.description);
-      setStep('editing');
-    });
+    async function prepare() {
+      textInterval = setInterval(() => {
+        setLoadingText((prev) => {
+          const idx = LOADING_TEXTS.indexOf(prev);
+          return LOADING_TEXTS[(idx + 1) % LOADING_TEXTS.length];
+        });
+      }, 900);
 
-    return () => clearInterval(textInterval);
-  }, []);
+      try {
+        const blob = await fetch(imageUri).then((r) => r.blob());
+        const contentType = blob.type || 'image/jpeg';
+        const filename = imageUri.split('/').pop() || 'image.jpg';
+
+        const { uploadUrl, publicUrl: pub } = await getUploadURL(filename, contentType);
+        await uploadImage(imageUri, uploadUrl, contentType);
+        setPublicUrl(pub);
+
+        setStep('analyzing');
+        const result = await analyzeImage(pub);
+        setMood(result.mood);
+        setTitle(result.title);
+        setDescription(result.description);
+        setStep('editing');
+      } catch (err) {
+        console.error('prepare failed', err);
+      } finally {
+        if (textInterval) clearInterval(textInterval);
+      }
+    }
+
+    prepare();
+
+    return () => {
+      if (textInterval) clearInterval(textInterval);
+    };
+  }, [imageUri]);
 
   const publish = useCallback(async () => {
+    if (!publicUrl) return;
     setStep('publishing');
     const post = await createPost({
-      imageUrl: imageUri,
+      imageUrl: publicUrl,
       mood,
       title: title.trim(),
       description: description.trim(),
     });
     addPost(post);
     navigation.replace('CreateSuccess', { postId: post.id });
-  }, [imageUri, mood, title, description, addPost, navigation]);
+  }, [publicUrl, mood, title, description, addPost, navigation]);
 
-  if (step === 'analyzing') {
+  if (step === 'uploading' || step === 'analyzing' || step === 'publishing') {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.centered}>
-        <Text style={styles.loadingText}>{loadingText}</Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (step === 'publishing') {
-    return (
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.centered}>
-        <Text style={styles.loadingText}>Publishing…</Text>
+        <Text style={styles.loadingText}>
+          {step === 'uploading' ? 'Uploading…' : step === 'publishing' ? 'Publishing…' : loadingText}
+        </Text>
       </SafeAreaView>
     );
   }
@@ -85,7 +103,11 @@ export function CreateEditScreen({ route, navigation }: Props) {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="cover" />
+        {publicUrl ? (
+          <Image source={{ uri: publicUrl }} style={styles.preview} resizeMode="cover" />
+        ) : (
+          <Image source={{ uri: imageUri }} style={styles.preview} resizeMode="cover" />
+        )}
 
         <Text style={styles.sectionLabel}>Mood</Text>
         <ScrollView

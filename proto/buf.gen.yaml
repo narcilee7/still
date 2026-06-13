@@ -10,10 +10,11 @@ plugins:
     opt: paths=source_relative
   - plugin: es
     out: ../packages/generated-sdk/src/gen
-    opt: target=ts
-  - plugin: connect-query
-    out: ../packages/generated-sdk/src/gen
-    opt: target=ts
+    opt:
+      - target=ts
+      - import_extension=none
   - plugin: connect-es
     out: ../packages/generated-sdk/src/gen
-    opt: target=ts
+    opt:
+      - target=ts
+      - import_extension=none

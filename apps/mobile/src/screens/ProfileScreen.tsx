@@ -1,15 +1,52 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { FlatList, ListRenderItem, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Post } from '@still/shared-types';
 import { PostCard, colors, spacing, typography } from '@still/design-system';
+import { getProfile, listFeed, resonate } from '../services/postApi';
 import { useStore } from '../store/useStore';
 
 export function ProfileScreen() {
   const user = useStore((state) => state.user);
   const posts = useStore((state) => state.posts.filter((p) => p.userId === state.user.id));
+  const setUser = useStore((state) => state.setUser);
+  const setPosts = useStore((state) => state.setPosts);
   const resonatedIds = useStore((state) => state.resonatedPostIds);
-  const toggleResonate = useStore((state) => state.toggleResonate);
+  const storeToggleResonate = useStore((state) => state.toggleResonate);
+  const updatePost = useStore((state) => state.updatePost);
+
+  const load = useCallback(async () => {
+    try {
+      const [profile, feed] = await Promise.all([getProfile(user.id), listFeed()]);
+      setUser({
+        ...user,
+        username: profile.user.username,
+        avatarUrl: profile.user.avatarUrl,
+        postsCount: profile.postsCount,
+        resonancesCount: profile.resonancesCount,
+      });
+      setPosts(feed);
+    } catch (err) {
+      console.error('profile load failed', err);
+    }
+  }, [user.id, setUser, setPosts]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleResonate = useCallback(
+    async (postId: string) => {
+      storeToggleResonate(postId);
+      try {
+        const updated = await resonate(postId);
+        updatePost(postId, { resonanceCount: updated.resonanceCount });
+      } catch (err) {
+        console.error('resonate failed', err);
+      }
+    },
+    [storeToggleResonate, updatePost]
+  );
 
   const renderItem: ListRenderItem<Post> = useCallback(
     ({ item }) => (
@@ -17,10 +54,10 @@ export function ProfileScreen() {
         post={item}
         variant="compact"
         resonated={resonatedIds.has(item.id)}
-        onResonate={() => toggleResonate(item.id)}
+        onResonate={() => handleResonate(item.id)}
       />
     ),
-    [resonatedIds, toggleResonate]
+    [resonatedIds, handleResonate]
   );
 
   const keyExtractor = useCallback((item: Post) => item.id, []);

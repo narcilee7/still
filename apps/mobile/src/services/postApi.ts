@@ -1,8 +1,28 @@
-import { Mood, Post } from '@still/shared-types';
-import { MOCK_POSTS } from '../data/mockPosts';
-import { MOCK_USER } from '../data/mockUser';
+import { createPromiseClient } from '@connectrpc/connect';
+import { createConnectTransport } from '@connectrpc/connect-web';
+import {
+  AnalyzeService,
+  CreatePostRequest,
+  FeedService,
+  GetProfileRequest,
+  GetUploadURLRequest,
+  PostService,
+  ResonateService,
+  StorageService,
+  UserService,
+} from '@still/generated-sdk';
+import { Mood, Post, User } from '@still/shared-types';
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const transport = createConnectTransport({
+  baseUrl: 'http://localhost:8080',
+});
+
+const feedClient = createPromiseClient(FeedService, transport);
+const postClient = createPromiseClient(PostService, transport);
+const analyzeClient = createPromiseClient(AnalyzeService, transport);
+const resonateClient = createPromiseClient(ResonateService, transport);
+const userClient = createPromiseClient(UserService, transport);
+const storageClient = createPromiseClient(StorageService, transport);
 
 export interface AnalysisResult {
   mood: Mood;
@@ -11,27 +31,35 @@ export interface AnalysisResult {
 }
 
 export interface ProfileResult {
-  user: {
-    id: string;
-    username: string;
-    avatarUrl?: string;
-  };
-  posts: Post[];
+  user: User;
   postsCount: number;
   resonancesCount: number;
 }
 
-export async function listFeed(): Promise<Post[]> {
-  await delay(400);
-  return [...MOCK_POSTS];
+function mapProtoPost(p: any): Post {
+  return {
+    id: p.id,
+    userId: p.userId,
+    imageUrl: p.imageUrl,
+    mood: p.mood as Mood,
+    title: p.title,
+    description: p.description,
+    createdAt: p.createdAt?.toDate().toISOString() ?? new Date().toISOString(),
+    resonanceCount: p.resonanceCount ?? 0,
+  };
 }
 
-export async function analyzeImage(): Promise<AnalysisResult> {
-  await delay(1200);
+export async function listFeed(): Promise<Post[]> {
+  const res = await feedClient.listFeed({ pageSize: 50, pageToken: '' });
+  return (res.posts ?? []).map(mapProtoPost);
+}
+
+export async function analyzeImage(imageUrl: string): Promise<AnalysisResult> {
+  const res = await analyzeClient.analyzeImage({ imageUrl });
   return {
-    mood: 'waiting',
-    title: 'On The Way',
-    description: 'Some days are made of unfinished thoughts.',
+    mood: (res.mood || 'still') as Mood,
+    title: res.title || '',
+    description: res.description || '',
   };
 }
 
@@ -41,30 +69,55 @@ export async function createPost(payload: {
   title: string;
   description: string;
 }): Promise<Post> {
-  await delay(800);
-  return {
-    id: `post-${Date.now()}`,
-    userId: MOCK_USER.id,
+  const req = new CreatePostRequest({
     imageUrl: payload.imageUrl,
     mood: payload.mood,
     title: payload.title,
     description: payload.description,
-    createdAt: new Date().toISOString(),
-    resonanceCount: 0,
+  });
+  const res = await postClient.createPost(req);
+  return mapProtoPost(res.post);
+}
+
+export async function resonate(postId: string): Promise<Post> {
+  const res = await resonateClient.resonate({ postId });
+  return mapProtoPost(res.post);
+}
+
+export async function getProfile(userId: string): Promise<ProfileResult> {
+  const req = new GetProfileRequest({ userId });
+  const res = await userClient.getProfile(req);
+  const user: User = {
+    id: res.user?.id || userId,
+    username: res.user?.username || '',
+    avatarUrl: res.user?.avatarUrl || undefined,
+  };
+  return {
+    user,
+    postsCount: res.postsCount ?? 0,
+    resonancesCount: res.resonancesCount ?? 0,
   };
 }
 
-export async function getProfile(): Promise<ProfileResult> {
-  await delay(300);
-  const userPosts = MOCK_POSTS.filter((p) => p.userId === MOCK_USER.id);
+export async function getUploadURL(filename: string, contentType: string) {
+  const req = new GetUploadURLRequest({ filename, contentType });
+  const res = await storageClient.getUploadURL(req);
   return {
-    user: {
-      id: MOCK_USER.id,
-      username: MOCK_USER.username,
-      avatarUrl: MOCK_USER.avatarUrl,
-    },
-    posts: userPosts,
-    postsCount: userPosts.length,
-    resonancesCount: MOCK_USER.resonancesCount,
+    uploadUrl: res.uploadUrl,
+    publicUrl: res.publicUrl,
   };
+}
+
+export async function uploadImage(localUri: string, uploadUrl: string, contentType: string) {
+  const blob = await fetch(localUri).then((r) => r.blob());
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    body: blob,
+    headers: {
+      'Content-Type': contentType,
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`upload failed: ${response.status}`);
+  }
 }
