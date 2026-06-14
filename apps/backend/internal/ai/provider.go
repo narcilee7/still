@@ -27,6 +27,11 @@ func ParseProvider(s string) Provider {
 }
 
 // SupportsVision reports whether the provider natively supports image inputs.
+//
+// Notes:
+//   - DeepSeek's V4 family supports vision, but only on the Pro model
+//     (deepseek-v4-pro). The default is set to that model so image inputs work
+//     out of the box; v4-flash is text-only.
 func (p Provider) SupportsVision() bool {
 	switch p {
 	case ProviderOpenAI, ProviderQwen, ProviderMoonshot:

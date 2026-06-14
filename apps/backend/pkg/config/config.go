@@ -95,16 +95,25 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+// defaultLLMModel returns the current recommended model for each provider.
+// These defaults are reviewed periodically; pin LLM_MODEL in your env file if you
+// need a different model or a dated snapshot.
 func defaultLLMModel(provider string) string {
 	switch provider {
 	case "openai":
-		return "gpt-4o-mini"
+		// GPT-5.3 Instant is the current everyday ChatGPT / API default.
+		// Use gpt-4o-mini if you prefer a smaller, cheaper vision-capable fallback.
+		return "gpt-5.3-chat-latest"
 	case "deepseek":
-		return "deepseek-chat"
+		// deepseek-v4-pro is the vision-capable sibling; v4-flash is text-only.
+		// The legacy IDs deepseek-chat / deepseek-reasoner retire on 2026-07-24.
+		return "deepseek-v4-pro"
 	case "moonshot":
-		return "moonshot-v1-8k"
+		// Kimi K2.6 is the latest multimodal flagship (vision + text + tool use).
+		return "kimi-k2.6"
 	case "qwen":
-		return "qwen-plus"
+		// Qwen3.5 Plus is the native vision-language flagship on DashScope.
+		return "qwen3.5-plus"
 	default:
 		return ""
 	}
