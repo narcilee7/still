@@ -31,11 +31,11 @@ still/
 | 层级          | 技术                                                                              |
 | ------------- | --------------------------------------------------------------------------------- |
 | Mobile        | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand + Clerk |
-| Backend       | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate + go-openai                        |
+| Backend       | Go 1.26 + ConnectRPC + pgx/v5 + golang-migrate                                    |
 | API           | Protocol Buffers + buf                                                            |
 | Database      | PostgreSQL                                                                        |
 | Storage       | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / R2)                                |
-| AI            | OpenAI / Claude / Gemini（统一抽象）                                              |
+| AI            | Eino + eino-ext（OpenAI / DeepSeek / Moonshot / Qwen 统一 Provider）              |
 | Auth          | Clerk（JWT 验证，后端 `internal/auth`）                                           |
 | Observability | zerolog + OpenTelemetry + Sentry                                                  |
 
@@ -90,6 +90,13 @@ make clean      # 停止基础设施并清理卷
 - 本地类生产栈：`docker-compose.prod.yml`。
 - 平台配置：`fly.toml`、`render.yaml`、`railway.toml`。
 - 详细说明见 `docs/Tech/deployment.md`。
+
+## AI / LLM Provider
+
+- 后端 `internal/ai` 基于 [Eino](https://github.com/cloudwego/eino) 构建统一 `Analyzer` 接口。
+- 通过 `LLM_PROVIDER` 切换：`openai`（默认）、`deepseek`、`moonshot`、`qwen`。
+- `LLM_MODEL`、`LLM_API_KEY`、`LLM_BASE_URL` 控制具体模型和端点。
+- Eino 全局回调在 `internal/ai/callbacks.go` 中记录每次 LLM 调用的 token usage、model、error trajectory。
 
 ## Internationalization
 

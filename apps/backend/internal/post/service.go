@@ -94,9 +94,9 @@ func (s *Service) CreatePost(ctx context.Context, req *connect.Request[stillv1.C
 	}
 
 	if result != nil {
-		provider := "stub"
-		if _, ok := s.analyzer.(*ai.OpenAIAnalyzer); ok {
-			provider = "openai"
+		provider := s.analyzer.Provider()
+		if provider == "" {
+			provider = "unknown"
 		}
 		if err := s.analysisRepo.SaveAnalysis(ctx, post.Id, provider, "v1", result); err != nil {
 			log.Warn().Err(err).Str("post_id", post.Id).Msg("save analysis failed")

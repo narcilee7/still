@@ -72,7 +72,10 @@ func main() {
 		log.Fatal().Err(err).Msg("s3 store failed")
 	}
 
-	analyzer := ai.NewOpenAIAnalyzer(cfg.OpenAIKey)
+	analyzer, err := ai.NewAnalyzerFromConfig(context.Background(), cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("analyzer init failed")
+	}
 
 	srv := server.New(":"+cfg.Port, pool, analyzer, store, cfg)
 

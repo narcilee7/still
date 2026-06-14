@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Config holds application configuration.
@@ -12,7 +13,11 @@ type Config struct {
 	Port        string
 	DatabaseURL string
 
-	OpenAIKey string
+	// LLM configuration (replaces the old single OpenAIKey).
+	LLMProvider string
+	LLMModel    string
+	LLMAPIKey   string
+	LLMBaseURL  string
 
 	S3Endpoint        string
 	S3Region          string
@@ -26,19 +31,24 @@ type Config struct {
 
 	SentryDSN string
 
-	OTelExporter   string
+	OTelExporter    string
 	OTelServiceName string
 }
 
 // Load loads configuration from environment variables.
 func Load() *Config {
+	provider := strings.ToLower(getEnv("LLM_PROVIDER", "openai"))
+
 	return &Config{
 		AppEnv: getEnv("APP_ENV", "dev"),
 
 		Port:        getEnv("PORT", "8080"),
 		DatabaseURL: getEnv("DATABASE_URL", "postgres://localhost/still?sslmode=disable"),
 
-		OpenAIKey: getEnv("OPENAI_API_KEY", ""),
+		LLMProvider: provider,
+		LLMModel:    getEnv("LLM_MODEL", defaultLLMModel(provider)),
+		LLMAPIKey:   getEnv("LLM_API_KEY", getEnv("OPENAI_API_KEY", "")),
+		LLMBaseURL:  getEnv("LLM_BASE_URL", ""),
 
 		S3Endpoint:        getEnv("S3_ENDPOINT", ""),
 		S3Region:          getEnv("S3_REGION", "us-east-1"),
@@ -59,8 +69,14 @@ func Load() *Config {
 
 // Validate ensures required configuration is present.
 func (c *Config) Validate() error {
-	if c.OpenAIKey == "" {
-		return fmt.Errorf("OPENAI_API_KEY is required")
+	if c.LLMProvider == "" {
+		return fmt.Errorf("LLM_PROVIDER is required")
+	}
+	if c.LLMModel == "" {
+		return fmt.Errorf("LLM_MODEL is required")
+	}
+	if c.LLMAPIKey == "" {
+		return fmt.Errorf("LLM_API_KEY (or legacy OPENAI_API_KEY) is required")
 	}
 	if c.S3Bucket == "" {
 		return fmt.Errorf("S3_BUCKET is required")
@@ -77,6 +93,21 @@ func (c *Config) Validate() error {
 		}
 	}
 	return nil
+}
+
+func defaultLLMModel(provider string) string {
+	switch provider {
+	case "openai":
+		return "gpt-4o-mini"
+	case "deepseek":
+		return "deepseek-chat"
+	case "moonshot":
+		return "moonshot-v1-8k"
+	case "qwen":
+		return "qwen-plus"
+	default:
+		return ""
+	}
 }
 
 func getEnv(key, fallback string) string {
