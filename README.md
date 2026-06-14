@@ -34,15 +34,17 @@ still/
 
 ## Tech Stack
 
-| Layer    | Tech                                                                      |
-| -------- | ------------------------------------------------------------------------- |
-| Mobile   | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand |
-| Backend  | Go + ConnectRPC + pgx/v5 + golang-migrate                                 |
-| API      | Protocol Buffers + buf                                                    |
-| Database | PostgreSQL                                                                |
-| Storage  | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / Cloudflare R2)             |
-| AI       | OpenAI GPT-4o vision                                                      |
-| Auth     | Clerk (recommended) — not yet implemented                                 |
+| Layer           | Tech                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| Mobile          | Expo SDK 54 (React Native 0.81) + TypeScript + React Navigation + Zustand                |
+| Backend         | Go + ConnectRPC + pgx/v5 + golang-migrate                                                |
+| API             | Protocol Buffers + buf                                                                   |
+| Database        | PostgreSQL                                                                               |
+| Storage         | S3 / S3-compatible (dev: MinIO, prod: AWS S3 / Cloudflare R2)                            |
+| AI              | CloudWeGo Eino + multi-provider LLM layer (OpenAI, DeepSeek, Moonshot, Qwen)             |
+| Auth            | Clerk                                                                                    |
+| Observability   | zerolog + OpenTelemetry + Sentry                                                         |
+| CI / Deployment | GitHub Actions + Docker + Fly.io / Railway / Render configs                              |
 
 ## Quick Start
 
@@ -71,7 +73,7 @@ This creates dev env files from `.env.example`:
 - `apps/backend/.env.development`
 - `apps/mobile/.env.development`
 
-Edit `apps/backend/.env.development` and set your `OPENAI_API_KEY`.
+Edit `apps/backend/.env.development` and set your `LLM_API_KEY` (legacy `OPENAI_API_KEY` still works when using OpenAI).
 
 ### 3. Start Infrastructure
 
@@ -115,10 +117,14 @@ make clean         # Stop infrastructure and remove volumes
 
 1. Fill `apps/backend/.env.production` with real credentials:
    - PostgreSQL `DATABASE_URL`
-   - `OPENAI_API_KEY`
+   - `LLM_PROVIDER` and `LLM_API_KEY` (see `.env.example` for supported providers)
+   - `CLERK_SECRET_KEY`
    - S3 credentials (`S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`)
+   - Optional: `SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT`
 2. Set `apps/mobile/.env.production` `EXPO_PUBLIC_API_BASE_URL` to your production API domain.
 3. Build and deploy the backend and mobile app as usual.
+
+See `docs/` for PRD, architecture decisions, and deployment guides.
 
 ## License
 
