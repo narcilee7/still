@@ -82,14 +82,22 @@ func (f *fakeUserReader) GetOrCreateUserByClerkID(ctx context.Context, clerkUser
 }
 
 type fakeAnalyzer struct {
-	called bool
-	result *ai.Result
-	err    error
+	called   bool
+	result   *ai.Result
+	err      error
+	provider string
 }
 
 func (f *fakeAnalyzer) Analyze(ctx context.Context, imageURL string) (*ai.Result, error) {
 	f.called = true
 	return f.result, f.err
+}
+
+func (f *fakeAnalyzer) Provider() string {
+	if f.provider != "" {
+		return f.provider
+	}
+	return "stub"
 }
 
 func TestCreatePost_SkipsAI_WhenAllFieldsProvided(t *testing.T) {
