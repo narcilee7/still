@@ -5,11 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/types';
 import { useStore } from '../store/useStore';
 import { updatePost } from '../services/postApi';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography, QuietButton } from '@still/design-system';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditPost'>;
 
 export function EditPostScreen({ route, navigation }: Props) {
+  const { t } = useTranslation();
   const { postId } = route.params;
   const post = useStore((state) => state.posts.find((p) => p.id === postId));
   const updatePostInStore = useStore((state) => state.updatePost);
@@ -44,8 +46,8 @@ export function EditPostScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>Moment not found</Text>
-          <QuietButton title="Go back" onPress={() => navigation.goBack()} />
+          <Text style={styles.emptyText}>{t('editPost.notFound')}</Text>
+          <QuietButton title={t('editPost.goBack')} onPress={() => navigation.goBack()} />
         </View>
       </SafeAreaView>
     );
@@ -54,28 +56,28 @@ export function EditPostScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.label}>Title</Text>
+        <Text style={styles.label}>{t('editPost.title')}</Text>
         <TextInput
           value={title}
           onChangeText={setTitle}
           style={styles.input}
-          placeholder="A few words"
+          placeholder={t('create.edit.titlePlaceholder')}
           placeholderTextColor={colors.secondary}
           maxLength={80}
         />
-        <Text style={styles.label}>Description</Text>
+        <Text style={styles.label}>{t('editPost.description')}</Text>
         <TextInput
           value={description}
           onChangeText={setDescription}
           style={[styles.input, styles.inputMultiline]}
-          placeholder="What lingers?"
+          placeholder={t('create.edit.descriptionPlaceholder')}
           placeholderTextColor={colors.secondary}
           multiline
           maxLength={240}
         />
       </ScrollView>
       <View style={styles.footer}>
-        <QuietButton title="Save" onPress={save} disabled={saving} />
+        <QuietButton title={t('editPost.save')} onPress={save} disabled={saving} />
       </View>
     </SafeAreaView>
   );

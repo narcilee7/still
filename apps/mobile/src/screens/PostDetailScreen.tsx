@@ -6,11 +6,13 @@ import { Image } from 'expo-image';
 import { RootStackParamList } from '../navigation/types';
 import { useStore } from '../store/useStore';
 import { deletePost } from '../services/postApi';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, typography, QuietButton } from '@still/design-system';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PostDetail'>;
 
 export function PostDetailScreen({ route, navigation }: Props) {
+  const { t } = useTranslation();
   const { postId } = route.params;
   const post = useStore((state) => state.posts.find((p) => p.id === postId));
   const user = useStore((state) => state.user);
@@ -30,10 +32,10 @@ export function PostDetailScreen({ route, navigation }: Props) {
 
   const handleDelete = useCallback(() => {
     if (!post) return;
-    Alert.alert('Delete moment?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('postDetail.deleteTitle'), t('postDetail.deleteMessage'), [
+      { text: t('postDetail.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('postDetail.delete'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -46,14 +48,14 @@ export function PostDetailScreen({ route, navigation }: Props) {
         },
       },
     ]);
-  }, [post, removePost, navigation]);
+  }, [post, removePost, navigation, t]);
 
   if (!post) {
     return (
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>Moment not found</Text>
-          <QuietButton title="Go back" onPress={() => navigation.goBack()} />
+          <Text style={styles.emptyText}>{t('postDetail.notFound')}</Text>
+          <QuietButton title={t('postDetail.goBack')} onPress={() => navigation.goBack()} />
         </View>
       </SafeAreaView>
     );
@@ -63,7 +65,7 @@ export function PostDetailScreen({ route, navigation }: Props) {
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Pressable onPress={() => navigation.goBack()} style={styles.close}>
-          <Text style={styles.closeText}>Close</Text>
+          <Text style={styles.closeText}>{t('postDetail.close')}</Text>
         </Pressable>
         <Image
           source={{ uri: post.imageUrl }}
@@ -76,18 +78,24 @@ export function PostDetailScreen({ route, navigation }: Props) {
           <Text style={styles.mood}>{post.mood}</Text>
           <Text style={styles.title}>{post.title}</Text>
           <Text style={styles.description}>{post.description}</Text>
-          <Text style={styles.count}>{post.resonanceCount} resonances</Text>
+          <Text style={styles.count}>
+            {t('postDetail.resonanceCount', { count: post.resonanceCount })}
+          </Text>
         </View>
         <View style={styles.actions}>
-          <QuietButton title="Share" variant="secondary" onPress={handleShare} />
+          <QuietButton title={t('postDetail.share')} variant="secondary" onPress={handleShare} />
           {isOwner && (
             <>
               <QuietButton
-                title="Edit"
+                title={t('postDetail.edit')}
                 variant="secondary"
                 onPress={() => navigation.navigate('EditPost', { postId: post.id })}
               />
-              <QuietButton title="Delete" variant="secondary" onPress={handleDelete} />
+              <QuietButton
+                title={t('postDetail.delete')}
+                variant="secondary"
+                onPress={handleDelete}
+              />
             </>
           )}
         </View>

@@ -6,6 +6,7 @@ import { AuthGate } from './src/components/AuthGate';
 import { TokenBridge } from './src/components/TokenBridge';
 import { clerkTokenCache } from './src/services/clerkTokenCache';
 import { initSentry, Sentry } from './src/services/sentry';
+import './src/i18n';
 
 initSentry();
 

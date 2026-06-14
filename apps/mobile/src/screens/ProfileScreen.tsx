@@ -18,12 +18,14 @@ import {
 } from '@still/design-system';
 import { getProfile, listFeed, resonate } from '../services/postApi';
 import { RootStackParamList } from '../navigation/types';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store/useStore';
 
 type LoadState = 'idle' | 'loading' | 'error';
 
 export function ProfileScreen() {
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const user = useStore((state) => state.user);
   const posts = useStore(
@@ -104,6 +106,10 @@ export function ProfileScreen() {
     }
   }, [signOut]);
 
+  const toggleLanguage = useCallback(() => {
+    i18n.changeLanguage(i18n.language.startsWith('zh') ? 'en' : 'zh');
+  }, [i18n]);
+
   const Header = () => (
     <View style={styles.header}>
       <View style={styles.avatar}>
@@ -117,15 +123,22 @@ export function ProfileScreen() {
       <View style={styles.stats}>
         <View style={styles.stat}>
           <Text style={styles.statNumber}>{user.postsCount}</Text>
-          <Text style={styles.statLabel}>Moments</Text>
+          <Text style={styles.statLabel}>{t('profile.moments')}</Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statNumber}>{user.resonancesCount}</Text>
-          <Text style={styles.statLabel}>Resonances</Text>
+          <Text style={styles.statLabel}>{t('profile.resonances')}</Text>
         </View>
       </View>
       <View style={styles.signOut}>
-        <QuietButton title="Sign out" variant="secondary" onPress={handleSignOut} />
+        <QuietButton title={t('profile.signOut')} variant="secondary" onPress={handleSignOut} />
+      </View>
+      <View style={styles.languageToggle}>
+        <QuietButton
+          title={t('profile.switchLanguage')}
+          variant="secondary"
+          onPress={toggleLanguage}
+        />
       </View>
     </View>
   );
@@ -145,8 +158,8 @@ export function ProfileScreen() {
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
         <View style={styles.centered}>
           <ErrorState
-            title="Could not load profile"
-            message="Something went wrong while fetching your profile. Please try again."
+            title={t('profile.errorTitle')}
+            message={t('profile.errorMessage')}
             onRetry={load}
           />
         </View>
@@ -170,7 +183,7 @@ export function ProfileScreen() {
           />
         }
         ListEmptyComponent={
-          <EmptyState title="No moments yet" subtitle="Your quiet moments will appear here." />
+          <EmptyState title={t('profile.emptyTitle')} subtitle={t('profile.emptySubtitle')} />
         }
       />
     </SafeAreaView>
@@ -239,6 +252,10 @@ const styles = StyleSheet.create({
   },
   signOut: {
     marginTop: spacing.xl,
+    minWidth: 160,
+  },
+  languageToggle: {
+    marginTop: spacing.md,
     minWidth: 160,
   },
 });

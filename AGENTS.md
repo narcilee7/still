@@ -91,6 +91,12 @@ make clean      # 停止基础设施并清理卷
 - 平台配置：`fly.toml`、`render.yaml`、`railway.toml`。
 - 详细说明见 `docs/Tech/deployment.md`。
 
+## Internationalization
+
+- 移动端使用 `i18next` + `react-i18next` + `expo-localization`。
+- 翻译文件位于 `apps/mobile/src/i18n/{en,zh}.json`。
+- 默认跟随系统语言，fallback 为英文；Profile 页可手动切换中英文。
+
 ## Code Style
 
 - Go：标准 Go 风格，`gofmt` + `go vet`。

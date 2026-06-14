@@ -1,0 +1,82 @@
+{
+  "auth": {
+    "title": "Still",
+    "subtitle": "A quiet place for your moments.",
+    "continueWithGoogle": "Continue with Google",
+    "signInError": "Could not sign in. Please try again."
+  },
+  "tabBar": {
+    "feed": "Feed",
+    "create": "Add",
+    "profile": "Profile"
+  },
+  "feed": {
+    "errorTitle": "Could not load feed",
+    "errorMessage": "Something went wrong while fetching moments. Please try again.",
+    "emptyTitle": "No moments yet",
+    "emptySubtitle": "Be the first to share a quiet moment."
+  },
+  "profile": {
+    "moments": "Moments",
+    "resonances": "Resonances",
+    "signOut": "Sign out",
+    "switchLanguage": "中文",
+    "errorTitle": "Could not load profile",
+    "errorMessage": "Something went wrong while fetching your profile. Please try again.",
+    "emptyTitle": "No moments yet",
+    "emptySubtitle": "Your quiet moments will appear here."
+  },
+  "create": {
+    "select": {
+      "title": "Add a moment",
+      "subtitle": "A photo, a feeling, a few quiet words.",
+      "chooseFromLibrary": "Choose from library",
+      "takePhoto": "Take photo",
+      "galleryPermission": "Gallery access is needed to choose a photo.",
+      "cameraPermission": "Camera access is needed to take a photo.",
+      "openSettings": "Open Settings"
+    },
+    "edit": {
+      "uploading": "Uploading…",
+      "analyzing": "Analyzing…",
+      "publishing": "Publishing…",
+      "loadingText": "Finding words…",
+      "mood": "Mood",
+      "title": "Title",
+      "description": "Description",
+      "titlePlaceholder": "A few words",
+      "descriptionPlaceholder": "What lingers?",
+      "publish": "Publish",
+      "prepareErrorTitle": "Could not prepare your moment",
+      "prepareErrorMessage": "Something went wrong while uploading or analyzing your photo. Please try again.",
+      "publishError": "We could not publish your moment. Please try again."
+    },
+    "success": {
+      "title": "Your moment lingers.",
+      "subtitle": "It is now part of the quiet stream.",
+      "addAnother": "Add another"
+    }
+  },
+  "postDetail": {
+    "close": "Close",
+    "notFound": "Moment not found",
+    "goBack": "Go back",
+    "share": "Share",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete moment?",
+    "deleteMessage": "This cannot be undone.",
+    "cancel": "Cancel",
+    "resonanceCount": "{{count}} resonances"
+  },
+  "editPost": {
+    "title": "Title",
+    "description": "Description",
+    "save": "Save",
+    "notFound": "Moment not found",
+    "goBack": "Go back"
+  },
+  "common": {
+    "retry": "Try again"
+  }
+}
