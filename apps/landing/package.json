@@ -1,0 +1,12 @@
+{
+  "name": "@still/landing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Still marketing landing page",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "build": "node scripts/build.cjs",
+    "lint": "prettier --check .",
+    "format": "prettier --write ."
+  }
+}

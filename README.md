@@ -126,6 +126,17 @@ make clean         # Stop infrastructure and remove volumes
 
 See `docs/` for PRD, architecture decisions, and deployment guides.
 
+## Contributing
+
+We welcome contributions to the Community Edition. Please read
+[CONTRIBUTING.md](CONTRIBUTING.md) and [CLA.md](CLA.md) before opening a PR.
+
+## Commercial Edition
+
+This repository is the open-source **Community Edition**. For the official hosted
+service, premium AI features, and enterprise support, see
+[COMMERCIAL.md](COMMERCIAL.md) or visit https://still.app (placeholder).
+
 ## License
 
-MIT
+[Apache License 2.0](LICENSE)
